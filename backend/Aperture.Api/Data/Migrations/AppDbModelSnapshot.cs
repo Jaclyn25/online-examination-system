@@ -90,6 +90,38 @@ namespace Aperture.Api.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Aperture.Api.Exams.Choice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId")
+                        .IsUnique()
+                        .HasFilter("\"IsCorrect\" = true");
+
+                    b.HasIndex("QuestionId", "Position")
+                        .IsUnique();
+
+                    b.ToTable("Choices");
+                });
+
             modelBuilder.Entity("Aperture.Api.Exams.Exam", b =>
                 {
                     b.Property<Guid>("Id")
@@ -138,6 +170,39 @@ namespace Aperture.Api.Data.Migrations
                             t.HasCheckConstraint("CK_Exam_Pass", "\"PassingPercentage\" BETWEEN 0 AND 100");
 
                             t.HasCheckConstraint("CK_Exam_Status", "\"Status\" IN ('Draft','Published','Closed')");
+                        });
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.Question", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Marks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("character varying(3000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId", "Position")
+                        .IsUnique();
+
+                    b.ToTable("Questions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Question_Marks", "\"Marks\" BETWEEN 1 AND 1000");
+
+                            t.HasCheckConstraint("CK_Question_Position", "\"Position\" > 0");
                         });
                 });
 
@@ -273,12 +338,30 @@ namespace Aperture.Api.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Aperture.Api.Exams.Choice", b =>
+                {
+                    b.HasOne("Aperture.Api.Exams.Question", null)
+                        .WithMany("Choices")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Aperture.Api.Exams.Exam", b =>
                 {
                     b.HasOne("Aperture.Api.Data.AppUser", null)
                         .WithMany()
                         .HasForeignKey("InstructorId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.Question", b =>
+                {
+                    b.HasOne("Aperture.Api.Exams.Exam", null)
+                        .WithMany()
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -331,6 +414,11 @@ namespace Aperture.Api.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.Question", b =>
+                {
+                    b.Navigation("Choices");
                 });
 #pragma warning restore 612, 618
         }

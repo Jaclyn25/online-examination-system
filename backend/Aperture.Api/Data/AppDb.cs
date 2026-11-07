@@ -9,9 +9,25 @@ public class AppUser : IdentityUser
 public class AppDb(DbContextOptions<AppDb> options) : IdentityDbContext<AppUser>(options)
 {
     public DbSet<Aperture.Api.Exams.Exam> Exams => Set<Aperture.Api.Exams.Exam>();
+    public DbSet<Aperture.Api.Exams.Question> Questions => Set<Aperture.Api.Exams.Question>();
+    public DbSet<Aperture.Api.Exams.Choice> Choices => Set<Aperture.Api.Exams.Choice>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        b.Entity<Aperture.Api.Exams.Question>(e =>
+        {
+            e.Property(x => x.Text).HasMaxLength(3000);
+            e.HasOne<Aperture.Api.Exams.Exam>().WithMany().HasForeignKey(x => x.ExamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.ExamId, x.Position }).IsUnique();
+            e.ToTable("Questions", t => { t.HasCheckConstraint("CK_Question_Marks", "\"Marks\" BETWEEN 1 AND 1000"); t.HasCheckConstraint("CK_Question_Position", "\"Position\" > 0"); });
+        });
+        b.Entity<Aperture.Api.Exams.Choice>(e =>
+        {
+            e.Property(x => x.Text).HasMaxLength(1000);
+            e.HasOne<Aperture.Api.Exams.Question>().WithMany(q => q.Choices).HasForeignKey(x => x.QuestionId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.QuestionId, x.Position }).IsUnique();
+            e.HasIndex(x => x.QuestionId).IsUnique().HasFilter("\"IsCorrect\" = true");
+        });
         b.Entity<Aperture.Api.Exams.Exam>(e =>
         {
             e.Property(x => x.Title).HasMaxLength(160);
