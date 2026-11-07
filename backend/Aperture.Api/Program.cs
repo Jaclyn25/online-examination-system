@@ -67,6 +67,7 @@ app.Use(async (c, next) =>
 app.MapOpenApi();
 app.MapAuth();
 app.MapExams();
+app.MapQuestions();
 app.MapGet("/api/health", async (AppDb db) => await db.Database.CanConnectAsync() ? Results.Ok(new { status = "healthy", product = "Aperture Exams" }) : Results.StatusCode(503));
 if (app.Configuration.GetValue<bool>("Database:Migrate"))
 {
