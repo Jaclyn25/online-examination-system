@@ -8,12 +8,26 @@ using Aperture.Api.Reports;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
+if (args.Contains("--healthcheck"))
+{
+    try
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+        Environment.ExitCode = (await client.GetAsync("http://127.0.0.1:8080/api/health")).IsSuccessStatusCode ? 0 : 1;
+    }
+    catch (HttpRequestException) { Environment.ExitCode = 1; }
+    catch (TaskCanceledException) { Environment.ExitCode = 1; }
+    return;
+}
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 128 * 1024);
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
+if (builder.Configuration["DataProtection:KeyPath"] is { } keyPath)
+    builder.Services.AddDataProtection().SetApplicationName("Aperture.Exams").PersistKeysToFileSystem(new DirectoryInfo(keyPath));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AttemptService>();
 builder.Services.AddScoped<ReportService>();

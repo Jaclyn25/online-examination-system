@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+**/node_modules
+**/bin
+**/obj
+**/dist
+**/.vite
+**/test-results
+**/playwright-report
+artifacts
+submission
+docs/screenshots
