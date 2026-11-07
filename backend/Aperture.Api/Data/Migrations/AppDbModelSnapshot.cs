@@ -173,6 +173,54 @@ namespace Aperture.Api.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Aperture.Api.Exams.ExamVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PassingPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ShowFeedback")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("ExamVersions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Version_Duration", "\"DurationMinutes\" BETWEEN 1 AND 240");
+
+                            t.HasCheckConstraint("CK_Version_Pass", "\"PassingPercentage\" BETWEEN 0 AND 100");
+                        });
+                });
+
             modelBuilder.Entity("Aperture.Api.Exams.Question", b =>
                 {
                     b.Property<Guid>("Id")
@@ -203,6 +251,69 @@ namespace Aperture.Api.Data.Migrations
                             t.HasCheckConstraint("CK_Question_Marks", "\"Marks\" BETWEEN 1 AND 1000");
 
                             t.HasCheckConstraint("CK_Question_Position", "\"Position\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.VersionChoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("VersionQuestionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VersionQuestionId")
+                        .IsUnique()
+                        .HasFilter("\"IsCorrect\" = true");
+
+                    b.HasIndex("VersionQuestionId", "Position")
+                        .IsUnique();
+
+                    b.ToTable("VersionChoices");
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.VersionQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExamVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Marks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("character varying(3000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamVersionId", "Position")
+                        .IsUnique();
+
+                    b.ToTable("VersionQuestions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_VersionQuestion_Marks", "\"Marks\" BETWEEN 1 AND 1000");
                         });
                 });
 
@@ -356,12 +467,39 @@ namespace Aperture.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Aperture.Api.Exams.ExamVersion", b =>
+                {
+                    b.HasOne("Aperture.Api.Exams.Exam", null)
+                        .WithMany()
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Aperture.Api.Exams.Question", b =>
                 {
                     b.HasOne("Aperture.Api.Exams.Exam", null)
                         .WithMany()
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.VersionChoice", b =>
+                {
+                    b.HasOne("Aperture.Api.Exams.VersionQuestion", null)
+                        .WithMany("Choices")
+                        .HasForeignKey("VersionQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.VersionQuestion", b =>
+                {
+                    b.HasOne("Aperture.Api.Exams.ExamVersion", null)
+                        .WithMany("Questions")
+                        .HasForeignKey("ExamVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -416,7 +554,17 @@ namespace Aperture.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Aperture.Api.Exams.ExamVersion", b =>
+                {
+                    b.Navigation("Questions");
+                });
+
             modelBuilder.Entity("Aperture.Api.Exams.Question", b =>
+                {
+                    b.Navigation("Choices");
+                });
+
+            modelBuilder.Entity("Aperture.Api.Exams.VersionQuestion", b =>
                 {
                     b.Navigation("Choices");
                 });
