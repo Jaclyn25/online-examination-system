@@ -14,6 +14,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AttemptService>();
+if (!builder.Environment.IsEnvironment("Testing")) builder.Services.AddHostedService<ExpirationWorker>();
 builder.Services.AddDbContext<AppDb>(o => o.UseNpgsql(builder.Configuration.GetConnectionString("Exams") ?? throw new InvalidOperationException("ConnectionStrings:Exams is required.")));
 builder.Services.AddIdentity<AppUser, IdentityRole>(o =>
 {
@@ -38,7 +39,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = 429;
-    o.AddPolicy("auth", c => RateLimitPartition.GetFixedWindowLimiter(c.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    o.AddPolicy("auth", c => RateLimitPartition.GetFixedWindowLimiter(c.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = builder.Configuration.GetValue("RateLimits:Auth", 20), Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 var app = builder.Build();
 app.UseExceptionHandler(handler => handler.Run(async c =>

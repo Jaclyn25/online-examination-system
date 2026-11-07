@@ -16,9 +16,17 @@ public class AppDb(DbContextOptions<AppDb> options) : IdentityDbContext<AppUser>
     public DbSet<Aperture.Api.Exams.VersionChoice> VersionChoices => Set<Aperture.Api.Exams.VersionChoice>();
     public DbSet<Aperture.Api.Attempts.Attempt> Attempts => Set<Aperture.Api.Attempts.Attempt>();
     public DbSet<Aperture.Api.Attempts.StudentAnswer> StudentAnswers => Set<Aperture.Api.Attempts.StudentAnswer>();
+    public DbSet<Aperture.Api.Attempts.AttemptResult> Results => Set<Aperture.Api.Attempts.AttemptResult>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        b.Entity<Aperture.Api.Attempts.AttemptResult>(e =>
+        {
+            e.HasKey(x => x.AttemptId);
+            e.HasOne<Aperture.Api.Attempts.Attempt>().WithOne().HasForeignKey<Aperture.Api.Attempts.AttemptResult>(x => x.AttemptId).OnDelete(DeleteBehavior.Restrict);
+            e.Property(x => x.Percentage).HasPrecision(5, 2);
+            e.ToTable("Results", t => { t.HasCheckConstraint("CK_Result_Marks", "\"TotalMarks\" > 0 AND \"EarnedMarks\" BETWEEN 0 AND \"TotalMarks\""); t.HasCheckConstraint("CK_Result_Percentage", "\"Percentage\" BETWEEN 0 AND 100"); });
+        });
         b.Entity<Aperture.Api.Attempts.Attempt>(e =>
         {
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
