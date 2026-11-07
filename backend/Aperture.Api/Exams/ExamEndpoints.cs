@@ -3,6 +3,7 @@ using Aperture.Api.Data;
 using Aperture.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Exams;
+
 public static class ExamEndpoints
 {
     public static string UserId(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;

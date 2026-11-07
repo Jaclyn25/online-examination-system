@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Aperture.Api.Exams;
 namespace Aperture.Tests;
+
 public class ExamTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]

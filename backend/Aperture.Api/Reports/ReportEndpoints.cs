@@ -5,6 +5,7 @@ using Aperture.Api.Exams;
 using Aperture.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Reports;
+
 public static class ReportEndpoints
 {
     public static void MapReports(this WebApplication app)
@@ -13,9 +14,12 @@ public static class ReportEndpoints
         student.MapGet("/history", async (AppDb db, ReportService reports, ClaimsPrincipal user) =>
         {
             var userId = ExamEndpoints.UserId(user); await reports.FinalizeDue(userId, false);
-            return await (from a in db.Attempts.AsNoTracking() join v in db.ExamVersions on a.ExamVersionId equals v.Id
-                          join r in db.Results on a.Id equals r.AttemptId into results from r in results.DefaultIfEmpty()
-                          where a.StudentId == userId orderby a.StartedAt descending
+            return await (from a in db.Attempts.AsNoTracking()
+                          join v in db.ExamVersions on a.ExamVersionId equals v.Id
+                          join r in db.Results on a.Id equals r.AttemptId into results
+                          from r in results.DefaultIfEmpty()
+                          where a.StudentId == userId
+                          orderby a.StartedAt descending
                           select new { a.Id, a.ExamId, v.Title, versionNumber = v.Number, a.Status, a.StartedAt, a.Deadline, a.CompletedAt, result = r }).ToListAsync();
         });
         student.MapGet("/attempts/{id:guid}/result", async (Guid id, AppDb db, AttemptService attempts, ReportService reports, ClaimsPrincipal user) =>

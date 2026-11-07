@@ -3,6 +3,7 @@ using Aperture.Api.Data;
 using Aperture.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Exams;
+
 public static class PublishingEndpoints
 {
     public static void MapPublishing(this WebApplication app)
@@ -17,11 +18,21 @@ public static class PublishingEndpoints
             foreach (var q in questions) QuestionEndpoints.Validate(new(q.Text, q.Marks, q.Choices.Select(c => new ChoiceInput(c.Text, c.IsCorrect)).ToList(), input.Revision));
             var version = new ExamVersion
             {
-                ExamId = id, Number = (await db.ExamVersions.Where(v => v.ExamId == id).MaxAsync(v => (int?)v.Number) ?? 0) + 1,
-                Title = exam.Title, Description = exam.Description, DurationMinutes = exam.DurationMinutes,
-                PassingPercentage = exam.PassingPercentage, ShowFeedback = input.ShowFeedback, PublishedAt = clock.GetUtcNow(),
-                Questions = questions.Select((q, i) => new VersionQuestion { Text = q.Text, Marks = q.Marks, Position = i + 1,
-                    Choices = q.Choices.OrderBy(c => c.Position).Select(c => new VersionChoice { Text = c.Text, Position = c.Position, IsCorrect = c.IsCorrect }).ToList() }).ToList()
+                ExamId = id,
+                Number = (await db.ExamVersions.Where(v => v.ExamId == id).MaxAsync(v => (int?)v.Number) ?? 0) + 1,
+                Title = exam.Title,
+                Description = exam.Description,
+                DurationMinutes = exam.DurationMinutes,
+                PassingPercentage = exam.PassingPercentage,
+                ShowFeedback = input.ShowFeedback,
+                PublishedAt = clock.GetUtcNow(),
+                Questions = questions.Select((q, i) => new VersionQuestion
+                {
+                    Text = q.Text,
+                    Marks = q.Marks,
+                    Position = i + 1,
+                    Choices = q.Choices.OrderBy(c => c.Position).Select(c => new VersionChoice { Text = c.Text, Position = c.Position, IsCorrect = c.IsCorrect }).ToList()
+                }).ToList()
             };
             db.ExamVersions.Add(version); exam.Status = "Published"; exam.Revision++;
             await db.SaveChangesAsync(); await tx.CommitAsync(); return Results.Ok(new { exam.Id, exam.Status, exam.Revision, versionId = version.Id, versionNumber = version.Number });

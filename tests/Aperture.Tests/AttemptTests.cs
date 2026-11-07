@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using Aperture.Api.Exams;
 using Aperture.Api.Attempts;
 namespace Aperture.Tests;
+
 public class AttemptTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     public static async Task<Guid> Published(HttpClient c, bool feedback = true, int passing = 60)

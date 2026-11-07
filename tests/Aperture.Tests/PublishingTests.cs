@@ -6,6 +6,7 @@ using Aperture.Api.Exams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 namespace Aperture.Tests;
+
 public class PublishingTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]

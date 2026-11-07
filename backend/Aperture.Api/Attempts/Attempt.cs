@@ -1,4 +1,5 @@
 namespace Aperture.Api.Attempts;
+
 public class Attempt
 {
     public Guid Id { get; set; } = Guid.NewGuid();

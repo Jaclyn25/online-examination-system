@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Aperture.Api.Exams;
 namespace Aperture.Tests;
+
 public class QuestionTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     public static QuestionInput Input(int revision = 1) => new("What does HTTP stand for?", 5, [new("Hypertext Transfer Protocol", true), new("Home Tool Transfer Protocol", false)], revision);
