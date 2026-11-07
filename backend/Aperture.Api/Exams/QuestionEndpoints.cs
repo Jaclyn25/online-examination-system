@@ -3,11 +3,12 @@ using Aperture.Api.Data;
 using Aperture.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Exams;
+
 public static class QuestionEndpoints
 {
     public static void Validate(QuestionInput input)
     {
-        if (string.IsNullOrWhiteSpace(input.Text) || input.Text.Length > 3000 || input.Marks is < 1 or > 1000 || input.Choices is null || input.Choices.Count is < 2 or > 8 || input.Choices.Any(c => string.IsNullOrWhiteSpace(c.Text) || c.Text.Length > 1000) || input.Choices.Count(c => c.IsCorrect) != 1 || input.Choices.Select(c => c.Text.Trim().ToUpperInvariant()).Distinct().Count() != input.Choices.Count)
+        if (string.IsNullOrWhiteSpace(input.Text) || input.Text.Length > 3000 || input.Marks is < 1 or > 1000 || input.Choices is null || input.Choices.Count is < 2 or > 8 || input.Choices.Any(c => c is null || string.IsNullOrWhiteSpace(c.Text) || c.Text.Length > 1000) || input.Choices.Count(c => c.IsCorrect) != 1 || input.Choices.Select(c => c.Text.Trim().ToUpperInvariant()).Distinct().Count() != input.Choices.Count)
             throw new ApiError(400, "A question needs text, 1–1000 marks and 2–8 distinct choices with exactly one correct answer.");
     }
     private static List<Choice> Choices(QuestionInput input) => input.Choices.Select((c, i) => new Choice { Text = c.Text.Trim(), IsCorrect = c.IsCorrect, Position = i + 1 }).ToList();

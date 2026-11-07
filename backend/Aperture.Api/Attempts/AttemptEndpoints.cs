@@ -4,11 +4,12 @@ using Aperture.Api.Exams;
 using Aperture.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Attempts;
+
 public static class AttemptEndpoints
 {
     public static void MapAttempts(this WebApplication app)
     {
-        var group = app.MapGroup("/api/student").RequireAuthorization(p => p.RequireRole("Student"));
+        var group = app.MapGroup("/api/student").RequireAuthorization(p => p.RequireRole("Student")).RequireRateLimiting("work");
         group.MapPost("/exams/{id:guid}/attempts", async (Guid id, AppDb db, AttemptService service, ClaimsPrincipal user, TimeProvider clock) =>
         {
             await using var tx = await db.Database.BeginTransactionAsync();

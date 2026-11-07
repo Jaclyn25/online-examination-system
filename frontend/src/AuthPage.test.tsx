@@ -3,9 +3,53 @@ import userEvent from '@testing-library/user-event'
 import { AuthForm } from './AuthPage'
 import { ErrorState, Loading } from './components'
 describe('Authentication forms', () => {
-  it('validates login fields', async () => { const submit = vi.fn(); render(<AuthForm registerMode={false} submit={submit}/>); await userEvent.click(screen.getByRole('button', { name: 'Sign in' })); expect(await screen.findByText('Enter a valid email address.')).toBeVisible(); expect(submit).not.toHaveBeenCalled() })
-  it('submits a student registration with no role field', async () => { const submit = vi.fn().mockResolvedValue(undefined); render(<AuthForm registerMode submit={submit}/>); await userEvent.type(screen.getByLabelText('Full name'), 'Avery Chen'); await userEvent.type(screen.getByLabelText('Email address'), 'avery@example.test'); await userEvent.type(screen.getByLabelText('Password'), 'Fictional!Demo42'); await userEvent.click(screen.getByRole('button', { name: 'Create student account' })); expect(submit).toHaveBeenCalledWith({ displayName: 'Avery Chen', email: 'avery@example.test', password: 'Fictional!Demo42' }) })
-  it('shows server authentication errors', async () => { render(<AuthForm registerMode={false} submit={async () => { throw new Error('Invalid email or password.') }}/>); await userEvent.type(screen.getByLabelText('Email address'), 'avery@example.test'); await userEvent.type(screen.getByLabelText('Password'), 'wrong'); await userEvent.click(screen.getByRole('button', { name: 'Sign in' })); expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password.') })
-  it('rejects weak registration passwords', async () => { render(<AuthForm registerMode submit={vi.fn()}/>); await userEvent.click(screen.getByRole('button', { name: 'Create student account' })); expect(await screen.findByText('Use at least 12 characters.')).toBeVisible() })
+  it('validates login fields', async () => {
+    const submit = vi.fn()
+    render(<AuthForm registerMode={false} submit={submit} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByText('Enter a valid email address.')).toBeVisible()
+    expect(submit).not.toHaveBeenCalled()
+  })
+  it('submits a student registration with no role field', async () => {
+    const submit = vi.fn().mockResolvedValue(undefined)
+    render(<AuthForm registerMode submit={submit} />)
+    await userEvent.type(screen.getByLabelText('Full name'), 'Avery Chen')
+    await userEvent.type(screen.getByLabelText('Email address'), 'avery@example.test')
+    await userEvent.type(screen.getByLabelText('Password'), 'Fictional!Demo42')
+    await userEvent.click(screen.getByRole('button', { name: 'Create student account' }))
+    expect(submit).toHaveBeenCalledWith({
+      displayName: 'Avery Chen',
+      email: 'avery@example.test',
+      password: 'Fictional!Demo42',
+    })
+  })
+  it('shows server authentication errors', async () => {
+    render(
+      <AuthForm
+        registerMode={false}
+        submit={async () => {
+          throw new Error('Invalid email or password.')
+        }}
+      />,
+    )
+    await userEvent.type(screen.getByLabelText('Email address'), 'avery@example.test')
+    await userEvent.type(screen.getByLabelText('Password'), 'wrong')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password.')
+  })
+  it('rejects weak registration passwords', async () => {
+    render(<AuthForm registerMode submit={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Create student account' }))
+    expect(await screen.findByText('Use at least 12 characters.')).toBeVisible()
+  })
 })
-it('presents loading and retry states accessibly', async () => { const retry = vi.fn(); const { unmount } = render(<Loading/>); expect(screen.getByRole('status')).toBeVisible(); unmount(); render(<ErrorState error={new Error('Network unavailable')} retry={retry}/>); expect(screen.getByRole('alert')).toHaveTextContent('Network unavailable'); await userEvent.click(screen.getByRole('button', { name: 'Try again' })); expect(retry).toHaveBeenCalledOnce() })
+it('presents loading and retry states accessibly', async () => {
+  const retry = vi.fn()
+  const { unmount } = render(<Loading />)
+  expect(screen.getByRole('status')).toBeVisible()
+  unmount()
+  render(<ErrorState error={new Error('Network unavailable')} retry={retry} />)
+  expect(screen.getByRole('alert')).toHaveTextContent('Network unavailable')
+  await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+  expect(retry).toHaveBeenCalledOnce()
+})

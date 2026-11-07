@@ -4,6 +4,7 @@ using Aperture.Api.Exams;
 using Aperture.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Attempts;
+
 public class AttemptService(AppDb db, TimeProvider clock)
 {
     public async Task<Attempt> Locked(Guid id) => await db.Attempts.FromSqlInterpolated($"SELECT * FROM \"Attempts\" WHERE \"Id\" = {id} FOR UPDATE").SingleOrDefaultAsync() ?? throw new ApiError(404, "Attempt not found.");
@@ -38,7 +39,22 @@ public class AttemptService(AppDb db, TimeProvider clock)
     {
         var version = await db.ExamVersions.AsNoTracking().Include(v => v.Questions).ThenInclude(q => q.Choices).SingleAsync(v => v.Id == a.ExamVersionId);
         var answers = await db.StudentAnswers.AsNoTracking().Where(x => x.AttemptId == a.Id).ToListAsync();
-        return new { a.Id, a.ExamId, a.ExamVersionId, a.Status, a.Revision, a.StartedAt, a.Deadline, a.CompletedAt, serverNow = clock.GetUtcNow(), version.Title, version.Description, version.DurationMinutes, version.PassingPercentage,
-            questions = version.Questions.OrderBy(q => q.Position).Select(q => new { q.Id, q.Text, q.Marks, q.Position, choices = q.Choices.OrderBy(c => c.Position).Select(c => new { c.Id, c.Text, c.Position }), selectedChoiceId = answers.SingleOrDefault(x => x.VersionQuestionId == q.Id)?.VersionChoiceId }) };
+        return new
+        {
+            a.Id,
+            a.ExamId,
+            a.ExamVersionId,
+            a.Status,
+            a.Revision,
+            a.StartedAt,
+            a.Deadline,
+            a.CompletedAt,
+            serverNow = clock.GetUtcNow(),
+            version.Title,
+            version.Description,
+            version.DurationMinutes,
+            version.PassingPercentage,
+            questions = version.Questions.OrderBy(q => q.Position).Select(q => new { q.Id, q.Text, q.Marks, q.Position, choices = q.Choices.OrderBy(c => c.Position).Select(c => new { c.Id, c.Text, c.Position }), selectedChoiceId = answers.SingleOrDefault(x => x.VersionQuestionId == q.Id)?.VersionChoiceId })
+        };
     }
 }

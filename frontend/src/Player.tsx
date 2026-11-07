@@ -7,27 +7,378 @@ import { Brand, ErrorState, Loading } from './components'
 import { useSession } from './session'
 import type { Attempt } from './types'
 export type PlayerAttempt = Attempt & { receivedAt: number }
-export function ExamTimer({ deadline, serverNow, receivedAt, onExpire }: { deadline: string; serverNow: string; receivedAt: number; onExpire: () => void }) {
-  const [remaining, setRemaining] = useState(() => Math.max(0, Math.ceil((Date.parse(deadline) - Date.parse(serverNow)) / 1000)))
+export function ExamTimer({
+  deadline,
+  serverNow,
+  receivedAt,
+  onExpire,
+}: {
+  deadline: string
+  serverNow: string
+  receivedAt: number
+  onExpire: () => void
+}) {
+  const [remaining, setRemaining] = useState(() =>
+    Math.max(0, Math.ceil((Date.parse(deadline) - Date.parse(serverNow)) / 1000)),
+  )
   const sent = useRef(false)
-  useEffect(() => { const timer = setInterval(() => setRemaining(Math.max(0, Math.ceil((Date.parse(deadline) - Date.parse(serverNow) - (Date.now() - receivedAt)) / 1000))), 500); return () => clearInterval(timer) }, [deadline, serverNow, receivedAt])
-  useEffect(() => { if (remaining === 0 && !sent.current) { sent.current = true; onExpire() } }, [remaining, onExpire])
-  return <div className={`exam-timer ${remaining <= 300 ? 'time-low' : ''}`}><Clock3 size={18}/><div><span>Time remaining</span><strong role="timer" aria-label="Time remaining">{Math.floor(remaining / 60).toString().padStart(2, '0')}:{(remaining % 60).toString().padStart(2, '0')}</strong></div></div>
+  useEffect(() => {
+    const timer = setInterval(
+      () =>
+        setRemaining(
+          Math.max(
+            0,
+            Math.ceil(
+              (Date.parse(deadline) - Date.parse(serverNow) - (Date.now() - receivedAt)) / 1000,
+            ),
+          ),
+        ),
+      500,
+    )
+    return () => clearInterval(timer)
+  }, [deadline, serverNow, receivedAt])
+  useEffect(() => {
+    if (remaining === 0 && !sent.current) {
+      sent.current = true
+      onExpire()
+    }
+  }, [remaining, onExpire])
+  return (
+    <div className={`exam-timer ${remaining <= 300 ? 'time-low' : ''}`}>
+      <Clock3 size={18} />
+      <div>
+        <span>Time remaining</span>
+        <strong role="timer" aria-label="Time remaining">
+          {Math.floor(remaining / 60)
+            .toString()
+            .padStart(2, '0')}
+          :{(remaining % 60).toString().padStart(2, '0')}
+        </strong>
+      </div>
+    </div>
+  )
 }
-export function AttemptPlayer({ attempt, saving = false, submitting = false, error, onSave, onSubmit }: { attempt: PlayerAttempt; saving?: boolean; submitting?: boolean; error?: Error | null; onSave: (questionId: string, choiceId: string | null) => void; onSubmit: () => void }) {
-  const [index, setIndex] = useState(0); const [confirm, setConfirm] = useState(false); const [flagged, setFlagged] = useState<Set<string>>(new Set())
-  const question = attempt.questions[index]; const answered = attempt.questions.filter(q => q.selectedChoiceId).length
+export function AttemptPlayer({
+  attempt,
+  saving = false,
+  submitting = false,
+  error,
+  onSave,
+  onSubmit,
+}: {
+  attempt: PlayerAttempt
+  saving?: boolean
+  submitting?: boolean
+  error?: Error | null
+  onSave: (questionId: string, choiceId: string | null) => void
+  onSubmit: () => void
+}) {
+  const [index, setIndex] = useState(0)
+  const [confirm, setConfirm] = useState(false)
+  const [flagged, setFlagged] = useState<Set<string>>(new Set())
+  const question = attempt.questions[index]
+  const answered = attempt.questions.filter((q) => q.selectedChoiceId).length
   const locked = saving || submitting || attempt.status !== 'Active'
-  return <div className="exam-player"><header className="player-topbar"><Brand/><div className="player-exam-title"><span>EXAMINATION IN PROGRESS</span><strong>{attempt.title}</strong></div><ExamTimer key={attempt.serverNow} deadline={attempt.deadline} serverNow={attempt.serverNow} receivedAt={attempt.receivedAt} onExpire={onSubmit}/></header><main className="player-main"><div className="player-heading"><div><p className="eyebrow">STAY CURIOUS. STAY FOCUSED.</p><h1>{attempt.title}</h1></div><Link className="text-link" to="/" onClick={e => { if (saving || submitting) e.preventDefault() }}>Save & exit</Link></div><div className="player-progress"><span>{answered} of {attempt.questions.length} answered</span><span className="save-status" role="status">{saving ? 'Saving answer…' : error ? 'Check your saved answers before continuing' : <><CloudCheck size={16}/>Saved answers are up to date</>}</span><div><i style={{ width: `${answered / attempt.questions.length * 100}%` }}/></div></div>{error && <ErrorState error={error}/>}<div className="player-grid"><section className="question-paper"><div className="question-paper-head"><span>QUESTION {index + 1} OF {attempt.questions.length}</span><span>{question.marks} marks</span><button className={`flag-button ${flagged.has(question.id) ? 'flagged' : ''}`} aria-pressed={flagged.has(question.id)} onClick={() => setFlagged(previous => { const next = new Set(previous); if (next.has(question.id)) next.delete(question.id); else next.add(question.id); return next })}><Flag size={15}/>{flagged.has(question.id) ? 'Flagged for review' : 'Flag for review'}</button></div><fieldset disabled={locked} className="form-fieldset"><legend className="question-text">{question.text}</legend><p className="muted question-help">Choose one answer.</p><div className="player-choices">{question.choices.map((choice, i) => <label className={`player-choice ${question.selectedChoiceId === choice.id ? 'selected' : ''}`} key={choice.id}><input type="radio" name={`answer-${question.id}`} checked={question.selectedChoiceId === choice.id} onChange={() => onSave(question.id, choice.id)}/><span className="choice-letter">{String.fromCharCode(65 + i)}</span><span>{choice.text}</span>{question.selectedChoiceId === choice.id && <CheckCircle2 size={18}/>}</label>)}</div>{question.selectedChoiceId && <button className="text-link clear-answer" type="button" onClick={() => onSave(question.id, null)}>Clear answer</button>}</fieldset><div className="question-navigation"><button className="button secondary" disabled={index === 0 || locked} onClick={() => setIndex(index - 1)}><ArrowLeft size={17}/>Previous</button>{index < attempt.questions.length - 1 ? <button className="button" disabled={locked} onClick={() => setIndex(index + 1)}>Next question<ArrowRight size={17}/></button> : <button className="button" disabled={locked} onClick={() => setConfirm(true)}>Review & submit<Send size={17}/></button>}</div></section><aside className="question-index"><h2>Your question map</h2><p>Jump to any question before submitting.</p><nav aria-label="Question navigation"><div className="question-map">{attempt.questions.map((q, i) => <button key={q.id} aria-label={`Question ${i + 1}, ${q.selectedChoiceId ? 'answered' : 'unanswered'}${flagged.has(q.id) ? ', flagged' : ''}`} aria-current={i === index ? 'step' : undefined} className={`${q.selectedChoiceId ? 'answered' : ''} ${flagged.has(q.id) ? 'flagged' : ''}`} onClick={() => setIndex(i)} disabled={locked}>{i + 1}{flagged.has(q.id) && <i/>}</button>)}</div></nav><div className="map-legend"><span><i className="answered"/>Answered</span><span><i/>Unanswered</span><span><Flag size={12}/>Flagged</span></div><div className="submission-summary"><p><strong>{attempt.questions.length - answered}</strong> unanswered <span>·</span> <strong>{flagged.size}</strong> flagged</p><button className="button full" disabled={locked} onClick={() => setConfirm(true)}>{submitting ? 'Finalizing…' : 'Review & submit'}<Send size={16}/></button></div><p className="hint">Your answers are saved after each change. If you leave, the timer continues. The server enforces your deadline.</p></aside></div>{confirm && <section className="confirmation player-confirmation" aria-label="Submission confirmation"><h2>Ready to submit your examination?</h2><p>You answered {answered} of {attempt.questions.length} questions. {attempt.questions.length - answered > 0 ? `${attempt.questions.length - answered} unanswered questions will earn zero marks.` : 'Every question has an answer.'} Submission is final and answers cannot be changed.</p><div className="actions"><button className="button" disabled={locked} onClick={onSubmit}>{submitting ? 'Submitting…' : 'Confirm final submission'}</button><button className="button secondary" disabled={submitting} onClick={() => setConfirm(false)}>Continue reviewing</button></div></section>}</main><footer className="player-footer"><span>Aperture Exams</span><span>Your progress, in focus.</span></footer></div>
+  return (
+    <div className="exam-player">
+      <header className="player-topbar">
+        <Brand />
+        <div className="player-exam-title">
+          <span>EXAMINATION IN PROGRESS</span>
+          <strong>{attempt.title}</strong>
+        </div>
+        <ExamTimer
+          key={attempt.serverNow}
+          deadline={attempt.deadline}
+          serverNow={attempt.serverNow}
+          receivedAt={attempt.receivedAt}
+          onExpire={onSubmit}
+        />
+      </header>
+      <main className="player-main">
+        <div className="player-heading">
+          <div>
+            <p className="eyebrow">STAY CURIOUS. STAY FOCUSED.</p>
+            <h1>{attempt.title}</h1>
+          </div>
+          <Link
+            className="text-link"
+            to="/"
+            onClick={(e) => {
+              if (saving || submitting) e.preventDefault()
+            }}
+          >
+            Save & exit
+          </Link>
+        </div>
+        <div className="player-progress">
+          <span>
+            {answered} of {attempt.questions.length} answered
+          </span>
+          <span className="save-status" role="status">
+            {saving ? (
+              'Saving answer…'
+            ) : error ? (
+              'Check your saved answers before continuing'
+            ) : (
+              <>
+                <CloudCheck size={16} />
+                Saved answers are up to date
+              </>
+            )}
+          </span>
+          <div>
+            <i style={{ width: `${(answered / attempt.questions.length) * 100}%` }} />
+          </div>
+        </div>
+        {error && <ErrorState error={error} />}
+        <div className="player-grid">
+          <section className="question-paper">
+            <div className="question-paper-head">
+              <span>
+                QUESTION {index + 1} OF {attempt.questions.length}
+              </span>
+              <span>{question.marks} marks</span>
+              <button
+                className={`flag-button ${flagged.has(question.id) ? 'flagged' : ''}`}
+                aria-pressed={flagged.has(question.id)}
+                onClick={() =>
+                  setFlagged((previous) => {
+                    const next = new Set(previous)
+                    if (next.has(question.id)) next.delete(question.id)
+                    else next.add(question.id)
+                    return next
+                  })
+                }
+              >
+                <Flag size={15} />
+                {flagged.has(question.id) ? 'Flagged for review' : 'Flag for review'}
+              </button>
+            </div>
+            <fieldset disabled={locked} className="form-fieldset">
+              <legend className="question-text">{question.text}</legend>
+              <p className="muted question-help">Choose one answer.</p>
+              <div className="player-choices">
+                {question.choices.map((choice, i) => (
+                  <label
+                    className={`player-choice ${question.selectedChoiceId === choice.id ? 'selected' : ''}`}
+                    key={choice.id}
+                  >
+                    <input
+                      type="radio"
+                      name={`answer-${question.id}`}
+                      checked={question.selectedChoiceId === choice.id}
+                      onChange={() => onSave(question.id, choice.id)}
+                    />
+                    <span className="choice-letter">{String.fromCharCode(65 + i)}</span>
+                    <span>{choice.text}</span>
+                    {question.selectedChoiceId === choice.id && <CheckCircle2 size={18} />}
+                  </label>
+                ))}
+              </div>
+              {question.selectedChoiceId && (
+                <button
+                  className="text-link clear-answer"
+                  type="button"
+                  onClick={() => onSave(question.id, null)}
+                >
+                  Clear answer
+                </button>
+              )}
+            </fieldset>
+            <div className="question-navigation">
+              <button
+                className="button secondary"
+                disabled={index === 0 || locked}
+                onClick={() => setIndex(index - 1)}
+              >
+                <ArrowLeft size={17} />
+                Previous
+              </button>
+              {index < attempt.questions.length - 1 ? (
+                <button className="button" disabled={locked} onClick={() => setIndex(index + 1)}>
+                  Next question
+                  <ArrowRight size={17} />
+                </button>
+              ) : (
+                <button className="button" disabled={locked} onClick={() => setConfirm(true)}>
+                  Review & submit
+                  <Send size={17} />
+                </button>
+              )}
+            </div>
+          </section>
+          <aside className="question-index">
+            <h2>Your question map</h2>
+            <p>Jump to any question before submitting.</p>
+            <nav aria-label="Question navigation">
+              <div className="question-map">
+                {attempt.questions.map((q, i) => (
+                  <button
+                    key={q.id}
+                    aria-label={`Question ${i + 1}, ${q.selectedChoiceId ? 'answered' : 'unanswered'}${flagged.has(q.id) ? ', flagged' : ''}`}
+                    aria-current={i === index ? 'step' : undefined}
+                    className={`${q.selectedChoiceId ? 'answered' : ''} ${flagged.has(q.id) ? 'flagged' : ''}`}
+                    onClick={() => setIndex(i)}
+                    disabled={locked}
+                  >
+                    {i + 1}
+                    {flagged.has(q.id) && <i />}
+                  </button>
+                ))}
+              </div>
+            </nav>
+            <div className="map-legend">
+              <span>
+                <i className="answered" />
+                Answered
+              </span>
+              <span>
+                <i />
+                Unanswered
+              </span>
+              <span>
+                <Flag size={12} />
+                Flagged
+              </span>
+            </div>
+            <div className="submission-summary">
+              <p>
+                <strong>{attempt.questions.length - answered}</strong> unanswered <span>·</span>{' '}
+                <strong>{flagged.size}</strong> flagged
+              </p>
+              <button className="button full" disabled={locked} onClick={() => setConfirm(true)}>
+                {submitting ? 'Finalizing…' : 'Review & submit'}
+                <Send size={16} />
+              </button>
+            </div>
+            <p className="hint">
+              Your answers are saved after each change. If you leave, the timer continues. The
+              server enforces your deadline.
+            </p>
+          </aside>
+        </div>
+        {confirm && (
+          <section
+            className="confirmation player-confirmation"
+            aria-label="Submission confirmation"
+          >
+            <h2>Ready to submit your examination?</h2>
+            <p>
+              You answered {answered} of {attempt.questions.length} questions.{' '}
+              {attempt.questions.length - answered > 0
+                ? `${attempt.questions.length - answered} unanswered questions will earn zero marks.`
+                : 'Every question has an answer.'}{' '}
+              Submission is final and answers cannot be changed.
+            </p>
+            <div className="actions">
+              <button className="button" disabled={locked} onClick={onSubmit}>
+                {submitting ? 'Submitting…' : 'Confirm final submission'}
+              </button>
+              <button
+                className="button secondary"
+                disabled={submitting}
+                onClick={() => setConfirm(false)}
+              >
+                Continue reviewing
+              </button>
+            </div>
+          </section>
+        )}
+      </main>
+      <footer className="player-footer">
+        <span>Aperture Exams</span>
+        <span>Your progress, in focus.</span>
+      </footer>
+    </div>
+  )
 }
 export function StudentPlayer() {
-  const { id } = useParams(); const { user, loading, error: sessionError } = useSession(); const navigate = useNavigate(); const cache = useQueryClient()
-  const query = useQuery({ queryKey: ['attempt', id], queryFn: async ({ signal }) => ({ ...await api<Attempt>(`/student/attempts/${id}`, { signal }), receivedAt: Date.now() }), enabled: user?.role === 'Student', refetchInterval: 15000, refetchOnWindowFocus: true })
-  const save = useMutation({ onMutate: async () => { await cache.cancelQueries({ queryKey: ['attempt', id] }) }, mutationFn: async ({ questionId, choiceId }: { questionId: string; choiceId: string | null }) => { const result = await api<{ revision: number }>(`/student/attempts/${id}/answers/${questionId}`, json('PUT', { choiceId, revision: query.data!.revision })); return { ...result, questionId, choiceId } }, onSuccess: result => { cache.setQueryData<PlayerAttempt>(['attempt', id], previous => previous ? { ...previous, revision: result.revision, questions: previous.questions.map(q => q.id === result.questionId ? { ...q, selectedChoiceId: result.choiceId } : q) } : previous) }, onError: () => { void query.refetch() } })
-  const submit = useMutation({ mutationFn: () => api(`/student/attempts/${id}/submit`, json('POST')), onSuccess: async () => { await cache.invalidateQueries({ queryKey: ['history'] }); navigate(`/results/${id}`, { replace: true }) } })
-  useEffect(() => { if (query.data && query.data.status !== 'Active') navigate(`/results/${id}`, { replace: true }) }, [query.data, navigate, id])
-  if (loading) return <Loading/>; if (sessionError) return <ErrorState error={sessionError}/>
-  if (!user) return <Navigate to="/login" replace/>; if (user.role !== 'Student') return <ErrorState error={new Error('This examination belongs to a student workspace.')}/>
-  if (query.isPending) return <Loading/>; if (query.error) return <ErrorState error={query.error} retry={() => { void query.refetch() }}/>
-  return <AttemptPlayer attempt={query.data} saving={save.isPending} submitting={submit.isPending} error={save.error ?? submit.error} onSave={(questionId, choiceId) => { if (!save.isPending && !submit.isPending) save.mutate({ questionId, choiceId }) }} onSubmit={() => { if (!submit.isPending && !submit.isSuccess) submit.mutate() }}/>
+  const { id } = useParams()
+  const { user, loading, error: sessionError } = useSession()
+  const navigate = useNavigate()
+  const cache = useQueryClient()
+  const query = useQuery({
+    queryKey: ['attempt', id],
+    queryFn: async ({ signal }) => ({
+      ...(await api<Attempt>(`/student/attempts/${id}`, { signal })),
+      receivedAt: Date.now(),
+    }),
+    enabled: user?.role === 'Student',
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+  })
+  const save = useMutation({
+    onMutate: async () => {
+      await cache.cancelQueries({ queryKey: ['attempt', id] })
+    },
+    mutationFn: async ({
+      questionId,
+      choiceId,
+    }: {
+      questionId: string
+      choiceId: string | null
+    }) => {
+      const result = await api<{ revision: number }>(
+        `/student/attempts/${id}/answers/${questionId}`,
+        json('PUT', { choiceId, revision: query.data!.revision }),
+      )
+      return { ...result, questionId, choiceId }
+    },
+    onSuccess: (result) => {
+      cache.setQueryData<PlayerAttempt>(['attempt', id], (previous) =>
+        previous
+          ? {
+              ...previous,
+              revision: result.revision,
+              questions: previous.questions.map((q) =>
+                q.id === result.questionId ? { ...q, selectedChoiceId: result.choiceId } : q,
+              ),
+            }
+          : previous,
+      )
+    },
+    onError: () => {
+      void query.refetch()
+    },
+  })
+  const submit = useMutation({
+    mutationFn: () => api(`/student/attempts/${id}/submit`, json('POST')),
+    onSuccess: async () => {
+      await cache.invalidateQueries({ queryKey: ['history'] })
+      navigate(`/results/${id}`, { replace: true })
+    },
+  })
+  useEffect(() => {
+    if (query.data && query.data.status !== 'Active') navigate(`/results/${id}`, { replace: true })
+  }, [query.data, navigate, id])
+  if (loading) return <Loading />
+  if (sessionError) return <ErrorState error={sessionError} />
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== 'Student')
+    return <ErrorState error={new Error('This examination belongs to a student workspace.')} />
+  if (query.isPending) return <Loading />
+  if (query.error)
+    return (
+      <ErrorState
+        error={query.error}
+        retry={() => {
+          void query.refetch()
+        }}
+      />
+    )
+  return (
+    <AttemptPlayer
+      attempt={query.data}
+      saving={save.isPending}
+      submitting={submit.isPending}
+      error={save.error ?? submit.error}
+      onSave={(questionId, choiceId) => {
+        if (!save.isPending && !submit.isPending) save.mutate({ questionId, choiceId })
+      }}
+      onSubmit={() => {
+        if (!submit.isPending && !submit.isSuccess) submit.mutate()
+      }}
+    />
+  )
 }

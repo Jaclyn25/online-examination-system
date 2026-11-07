@@ -4,6 +4,7 @@ using Aperture.Api.Data;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 namespace Aperture.Api.Auth;
+
 public record RegisterRequest(string Email, string Password, string DisplayName);
 public record LoginRequest(string Email, string Password);
 public static class AuthEndpoints
@@ -14,7 +15,7 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/auth").RequireRateLimiting("auth");
         group.MapPost("/register", async (RegisterRequest input, UserManager<AppUser> users) =>
         {
-            if (!new EmailAddressAttribute().IsValid(input.Email) || input.Email.Length > 254 || string.IsNullOrWhiteSpace(input.DisplayName) || input.DisplayName.Trim().Length > 100 || input.Password.Length > 128)
+            if (string.IsNullOrWhiteSpace(input.Email) || !new EmailAddressAttribute().IsValid(input.Email) || input.Email.Length > 254 || string.IsNullOrWhiteSpace(input.DisplayName) || input.DisplayName.Trim().Length > 100 || string.IsNullOrEmpty(input.Password) || input.Password.Length > 128)
                 return Results.ValidationProblem(new Dictionary<string, string[]> { ["registration"] = ["Enter a valid email, name and password."] });
             var user = new AppUser { UserName = input.Email.Trim(), Email = input.Email.Trim(), DisplayName = input.DisplayName.Trim() };
             var result = await users.CreateAsync(user, input.Password);
@@ -24,12 +25,19 @@ public static class AuthEndpoints
         });
         group.MapPost("/login", async (LoginRequest input, UserManager<AppUser> users, SignInManager<AppUser> signIn) =>
         {
+            if (string.IsNullOrWhiteSpace(input.Email) || input.Email.Length > 254 || string.IsNullOrEmpty(input.Password) || input.Password.Length > 128)
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["login"] = ["Enter an email and password of valid length."] });
             var user = await users.FindByEmailAsync(input.Email.Trim());
             if (user is null || input.Password.Length > 128) return Results.Problem(statusCode: 401, title: "Invalid email or password.");
             var result = await signIn.PasswordSignInAsync(user, input.Password, false, true);
             return result.Succeeded ? Results.NoContent() : Results.Problem(statusCode: 401, title: "Invalid email or password.");
         });
-        group.MapPost("/logout", async (SignInManager<AppUser> signIn) => { await signIn.SignOutAsync(); return Results.NoContent(); }).RequireAuthorization();
+        group.MapPost("/logout", async (ClaimsPrincipal principal, UserManager<AppUser> users, SignInManager<AppUser> signIn) =>
+        {
+            var user = (await users.GetUserAsync(principal))!;
+            await users.UpdateSecurityStampAsync(user);
+            await signIn.SignOutAsync(); return Results.NoContent();
+        }).RequireAuthorization();
         app.MapGet("/api/auth/me", async (ClaimsPrincipal principal, UserManager<AppUser> users) =>
         {
             var user = (await users.GetUserAsync(principal))!;

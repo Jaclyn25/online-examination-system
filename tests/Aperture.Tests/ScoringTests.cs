@@ -6,8 +6,22 @@ using Aperture.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 namespace Aperture.Tests;
+
 public class ScoringTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
+    [Fact]
+    public async Task ExpirationSweepFinalizesDisconnectedAttempt()
+    {
+        var (c, id, _) = await Start(); using var client = c;
+        factory.Clock.Advance(TimeSpan.FromMinutes(1));
+        var worker = new ExpirationWorker(factory.Services.GetRequiredService<IServiceScopeFactory>(), factory.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<ExpirationWorker>.Instance);
+        await worker.Sweep();
+        using var scope = factory.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDb>();
+        Assert.Equal("Expired", (await db.Attempts.FindAsync(id))!.Status);
+        Assert.Equal(0, (await db.Results.FindAsync(id))!.EarnedMarks);
+        await worker.Sweep();
+        Assert.Equal(1, await db.Results.CountAsync(r => r.AttemptId == id));
+    }
     private async Task<(HttpClient Client, Guid Id, JsonNode Question)> Start(int passing = 60)
     {
         using var instructor = await factory.User("Instructor"); var c = await factory.User();

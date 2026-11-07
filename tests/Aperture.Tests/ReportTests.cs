@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Aperture.Api.Attempts;
 namespace Aperture.Tests;
+
 public class ReportTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Theory]

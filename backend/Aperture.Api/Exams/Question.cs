@@ -1,4 +1,5 @@
 namespace Aperture.Api.Exams;
+
 public class Question
 {
     public Guid Id { get; set; } = Guid.NewGuid();

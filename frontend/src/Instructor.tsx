@@ -1,7 +1,19 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDown, ArrowUp, ArrowUpRight, Check, ChevronRight, Clock3, FileQuestion, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpRight,
+  Check,
+  ChevronRight,
+  Clock3,
+  FileQuestion,
+  Plus,
+  Search,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react'
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { api, json } from './api'
 import { Badge, date, Empty, ErrorState, Loading, PageTitle, TextLink } from './components'
@@ -9,34 +21,840 @@ import { ExamForm } from './ExamForm'
 import { QuestionForm } from './QuestionForm'
 import type { Exam, InstructorReport, Question } from './types'
 import { useSession } from './session'
-const useReport = (id?: string) => useQuery({ queryKey: ['reports', id ?? 'all'], queryFn: () => api<InstructorReport>(id ? `/instructor/exams/${id}/report` : '/instructor/reports') })
-export function Distribution({ report }: { report: InstructorReport }) { return <section className="panel distribution"><div className="section-head"><div><p className="eyebrow">PERFORMANCE</p><h2>Score distribution</h2></div><span className="chart-key"><i/>Completed attempts</span></div><div role="img" aria-label={`Score distribution across ${report.completedAttempts} completed attempts`}><ResponsiveContainer width="100%" height={220}><BarChart data={report.distribution} margin={{ top: 15, right: 10, bottom: 0, left: -22 }}><CartesianGrid vertical={false} stroke="var(--line)"/><XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--muted)' }}/><YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'var(--muted)' }}/><Tooltip cursor={{ fill: 'var(--soft)' }} contentStyle={{ borderRadius: 8, borderColor: 'var(--line)' }}/><Bar dataKey="count" name="Attempts" fill="var(--accent)" radius={[5, 5, 0, 0]} maxBarSize={42} isAnimationActive={false}/></BarChart></ResponsiveContainer></div><details className="chart-data"><summary>View chart data</summary><ul>{report.distribution.map(d => <li key={d.label}>{d.label}%: {d.count} attempts</li>)}</ul></details></section> }
-function Metrics({ report }: { report: InstructorReport }) { return <dl className="metrics-strip"><div><dt>Examinations</dt><dd>{report.totalExams}<small>{report.publishedExams} published</small></dd></div><div><dt>Student attempts</dt><dd>{report.totalAttempts}<small>{report.completedAttempts} completed</small></dd></div><div><dt>Average score</dt><dd>{report.averagePercentage.toFixed(1)}%<small>Completed attempts</small></dd></div><div><dt>Pass rate</dt><dd>{report.passRate.toFixed(1)}%<small>Across owned exams</small></dd></div></dl> }
+const useReport = (id?: string) =>
+  useQuery({
+    queryKey: ['reports', id ?? 'all'],
+    queryFn: () =>
+      api<InstructorReport>(id ? `/instructor/exams/${id}/report` : '/instructor/reports'),
+  })
+export function Distribution({ report }: { report: InstructorReport }) {
+  return (
+    <section className="panel distribution">
+      <div className="section-head">
+        <div>
+          <p className="eyebrow">PERFORMANCE</p>
+          <h2>Score distribution</h2>
+        </div>
+        <span className="chart-key">
+          <i />
+          Completed attempts
+        </span>
+      </div>
+      <div
+        role="img"
+        aria-label={`Score distribution across ${report.completedAttempts} completed attempts`}
+      >
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart
+            data={report.distribution}
+            margin={{ top: 15, right: 10, bottom: 0, left: -22 }}
+          >
+            <CartesianGrid vertical={false} stroke="var(--line)" />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11, fill: 'var(--muted)' }}
+            />
+            <YAxis
+              allowDecimals={false}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11, fill: 'var(--muted)' }}
+            />
+            <Tooltip
+              cursor={{ fill: 'var(--soft)' }}
+              contentStyle={{ borderRadius: 8, borderColor: 'var(--line)' }}
+            />
+            <Bar
+              dataKey="count"
+              name="Attempts"
+              fill="var(--accent)"
+              radius={[5, 5, 0, 0]}
+              maxBarSize={42}
+              isAnimationActive={false}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <details className="chart-data">
+        <summary>View chart data</summary>
+        <ul>
+          {report.distribution.map((d) => (
+            <li key={d.label}>
+              {d.label}%: {d.count} attempts
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  )
+}
+function Metrics({ report }: { report: InstructorReport }) {
+  return (
+    <dl className="metrics-strip">
+      <div>
+        <dt>Examinations</dt>
+        <dd>
+          {report.totalExams}
+          <small>{report.publishedExams} published</small>
+        </dd>
+      </div>
+      <div>
+        <dt>Student attempts</dt>
+        <dd>
+          {report.totalAttempts}
+          <small>{report.completedAttempts} completed</small>
+        </dd>
+      </div>
+      <div>
+        <dt>Average score</dt>
+        <dd>
+          {report.averagePercentage.toFixed(1)}%<small>Completed attempts</small>
+        </dd>
+      </div>
+      <div>
+        <dt>Pass rate</dt>
+        <dd>
+          {report.passRate.toFixed(1)}%<small>Across owned exams</small>
+        </dd>
+      </div>
+    </dl>
+  )
+}
 export function InstructorHome() {
-  const query = useReport(); const { user } = useSession()
-  if (query.isPending) return <Loading/>; if (query.error) return <ErrorState error={query.error} retry={() => { void query.refetch() }}/>
+  const query = useReport()
+  const { user } = useSession()
+  if (query.isPending) return <Loading />
+  if (query.error)
+    return (
+      <ErrorState
+        error={query.error}
+        retry={() => {
+          void query.refetch()
+        }}
+      />
+    )
   const report = query.data
-  return <><PageTitle eyebrow="TEACHING OVERVIEW" title={`A fresh perspective, ${user!.displayName.split(' ').slice(0, 2).join(' ')}.`} description="Thoughtful assessments. A clearer picture of learning."><Link className="button" to="/exams/new"><Plus size={18}/>Create examination</Link></PageTitle><Metrics report={report}/><div className="dashboard-grid"><section className="panel"><div className="section-head"><div><p className="eyebrow">YOUR ASSESSMENTS</p><h2>Examination activity</h2></div><TextLink to="/exams">View all</TextLink></div>{report.exams.length === 0 ? <Empty title="Create your first examination"><p>Start with a draft, add your questions, then publish when ready.</p><Link className="button" to="/exams/new">Create exam</Link></Empty> : <div className="exam-activity">{report.exams.slice(0, 5).map((e, i) => <Link to={`/exams/${e.id}`} className="activity-row" key={e.id}><span className="exam-number">{String(i + 1).padStart(2, '0')}</span><div><h3>{e.title}</h3><p>{e.attempts} attempts <span>·</span> {e.completed} completed</p></div><Badge status={e.status}/><ChevronRight size={17}/></Link>)}</div>}<div className="section-foot"><ShieldCheck size={17}/><p>Published versions preserve every student’s assessment.</p></div></section><Distribution report={report}/></div><section className="insight-banner"><div><p className="eyebrow">FROM SCORES TO NEXT STEPS</p><h2>See the story behind each assessment.</h2><p>Explore completion, pass rates and individual performance in your reports.</p></div><Link className="button secondary" to="/reports">Explore reports<ArrowUpRight size={18}/></Link></section></>
+  return (
+    <>
+      <PageTitle
+        eyebrow="TEACHING OVERVIEW"
+        title={`A fresh perspective, ${user!.displayName.split(' ').slice(0, 2).join(' ')}.`}
+        description="Thoughtful assessments. A clearer picture of learning."
+      >
+        <Link className="button" to="/exams/new">
+          <Plus size={18} />
+          Create examination
+        </Link>
+      </PageTitle>
+      <Metrics report={report} />
+      <div className="dashboard-grid">
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <p className="eyebrow">YOUR ASSESSMENTS</p>
+              <h2>Examination activity</h2>
+            </div>
+            <TextLink to="/exams">View all</TextLink>
+          </div>
+          {report.exams.length === 0 ? (
+            <Empty title="Create your first examination">
+              <p>Start with a draft, add your questions, then publish when ready.</p>
+              <Link className="button" to="/exams/new">
+                Create exam
+              </Link>
+            </Empty>
+          ) : (
+            <div className="exam-activity">
+              {report.exams.slice(0, 5).map((e, i) => (
+                <Link to={`/exams/${e.id}`} className="activity-row" key={e.id}>
+                  <span className="exam-number">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <h3>{e.title}</h3>
+                    <p>
+                      {e.attempts} attempts <span>·</span> {e.completed} completed
+                    </p>
+                  </div>
+                  <Badge status={e.status} />
+                  <ChevronRight size={17} />
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="section-foot">
+            <ShieldCheck size={17} />
+            <p>Published versions preserve every student’s assessment.</p>
+          </div>
+        </section>
+        <Distribution report={report} />
+      </div>
+      <section className="insight-banner">
+        <div>
+          <p className="eyebrow">FROM SCORES TO NEXT STEPS</p>
+          <h2>See the story behind each assessment.</h2>
+          <p>Explore completion, pass rates and individual performance in your reports.</p>
+        </div>
+        <Link className="button secondary" to="/reports">
+          Explore reports
+          <ArrowUpRight size={18} />
+        </Link>
+      </section>
+    </>
+  )
 }
 export function ExamList() {
-  const query = useQuery({ queryKey: ['exams'], queryFn: () => api<Exam[]>('/instructor/exams') }); const [search, setSearch] = useState(''); const [status, setStatus] = useState('All')
-  if (query.isPending) return <Loading/>; if (query.error) return <ErrorState error={query.error} retry={() => { void query.refetch() }}/>
-  const exams = query.data.filter(e => (status === 'All' || status === e.status) && (e.title + e.description).toLowerCase().includes(search.toLowerCase()))
-  return <><PageTitle eyebrow="ASSESSMENT STUDIO" title="Examinations" description="Prepare, publish and manage assessments with confidence."><Link className="button" to="/exams/new"><Plus size={18}/>Create examination</Link></PageTitle><div className="list-toolbar"><div className="search-field"><Search size={17}/><label className="sr-only" htmlFor="exam-search">Search examinations</label><input id="exam-search" type="search" placeholder="Search examinations…" value={search} onChange={e => setSearch(e.target.value)}/></div><label className="filter-label">Status<select value={status} onChange={e => setStatus(e.target.value)}>{['All', 'Draft', 'Published', 'Closed'].map(s => <option key={s}>{s}</option>)}</select></label><span className="muted list-count">{exams.length} examinations</span></div>{exams.length === 0 ? <Empty title="No examinations found"><p>{search || status !== 'All' ? 'Try another search or status filter.' : 'Create a draft and start shaping your assessment.'}</p></Empty> : <div className="table-wrap"><table><thead><tr><th>Examination</th><th>Status</th><th>Duration</th><th>Pass threshold</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{exams.map(e => <tr key={e.id}><td><Link className="table-title" to={`/exams/${e.id}`}>{e.title}</Link><p className="table-description">{e.description || 'No description yet'}</p></td><td><Badge status={e.status}/></td><td>{e.durationMinutes} min</td><td>{e.passingPercentage}%</td><td><TextLink to={`/exams/${e.id}`}>Manage</TextLink></td></tr>)}</tbody></table></div>}</>
+  const query = useQuery({ queryKey: ['exams'], queryFn: () => api<Exam[]>('/instructor/exams') })
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('All')
+  if (query.isPending) return <Loading />
+  if (query.error)
+    return (
+      <ErrorState
+        error={query.error}
+        retry={() => {
+          void query.refetch()
+        }}
+      />
+    )
+  const exams = query.data.filter(
+    (e) =>
+      (status === 'All' || status === e.status) &&
+      (e.title + e.description).toLowerCase().includes(search.toLowerCase()),
+  )
+  return (
+    <>
+      <PageTitle
+        eyebrow="ASSESSMENT STUDIO"
+        title="Examinations"
+        description="Prepare, publish and manage assessments with confidence."
+      >
+        <Link className="button" to="/exams/new">
+          <Plus size={18} />
+          Create examination
+        </Link>
+      </PageTitle>
+      <div className="list-toolbar">
+        <div className="search-field">
+          <Search size={17} />
+          <label className="sr-only" htmlFor="exam-search">
+            Search examinations
+          </label>
+          <input
+            id="exam-search"
+            type="search"
+            placeholder="Search examinations…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <label className="filter-label">
+          Status
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            {['All', 'Draft', 'Published', 'Closed'].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+        <span className="muted list-count">{exams.length} examinations</span>
+      </div>
+      {exams.length === 0 ? (
+        <Empty title="No examinations found">
+          <p>
+            {search || status !== 'All'
+              ? 'Try another search or status filter.'
+              : 'Create a draft and start shaping your assessment.'}
+          </p>
+        </Empty>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Examination</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Pass threshold</th>
+                <th>
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {exams.map((e) => (
+                <tr key={e.id}>
+                  <td>
+                    <Link className="table-title" to={`/exams/${e.id}`}>
+                      {e.title}
+                    </Link>
+                    <p className="table-description">{e.description || 'No description yet'}</p>
+                  </td>
+                  <td>
+                    <Badge status={e.status} />
+                  </td>
+                  <td>{e.durationMinutes} min</td>
+                  <td>{e.passingPercentage}%</td>
+                  <td>
+                    <TextLink to={`/exams/${e.id}`}>Manage</TextLink>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  )
 }
 export function ExamEditor() {
-  const { id } = useParams(); const navigate = useNavigate(); const cache = useQueryClient(); const [editing, setEditing] = useState<string | null>(null); const [confirmation, setConfirmation] = useState<string | null>(null); const [feedback, setFeedback] = useState(true); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState('')
-  const query = useQuery({ queryKey: ['exam', id], queryFn: () => api<Exam>(`/instructor/exams/${id}`), enabled: !!id }); const questionsQuery = useQuery({ queryKey: ['questions', id], queryFn: () => api<Question[]>(`/instructor/exams/${id}/questions`), enabled: !!id }); const exam = query.data; const questions = questionsQuery.data ?? []
-  async function refresh() { await Promise.all([cache.invalidateQueries({ queryKey: ['exam', id] }), cache.invalidateQueries({ queryKey: ['questions', id] }), cache.invalidateQueries({ queryKey: ['exams'] }), cache.invalidateQueries({ queryKey: ['reports'] })]) }
-  async function action(work: () => Promise<unknown>, message: string) { setBusy(true); setError(''); setNotice(''); try { await work(); setEditing(null); setConfirmation(null); await refresh(); setNotice(message) } catch (e) { setError((e as Error).message); await refresh() } finally { setBusy(false) } }
-  if (id && (query.isPending || questionsQuery.isPending)) return <Loading/>; if (query.error || questionsQuery.error) return <ErrorState error={(query.error ?? questionsQuery.error)!} retry={() => { void refresh() }}/>
-  if (!id) return <><PageTitle eyebrow="ASSESSMENT STUDIO / NEW EXAM" title="Create an examination" description="Start with the essentials. You’ll add questions in the next step."/><div className="editor-layout"><section className="panel"><h2>Examination details</h2><ExamForm submit={async values => { const created = await api<Exam>('/instructor/exams', json('POST', values)); await cache.invalidateQueries({ queryKey: ['exams'] }); navigate(`/exams/${created.id}`) }}/></section><aside className="editor-guide"><span className="guide-number">01</span><h2>A thoughtful starting point.</h2><p>Choose a clear title and share useful instructions. Set enough time for students to read, reflect and review.</p><ol><li>Define your examination</li><li>Build and order questions</li><li>Review and publish</li></ol><p className="hint">Drafts are visible only to you.</p></aside></div></>
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const cache = useQueryClient()
+  const [editing, setEditing] = useState<string | null>(null)
+  const [confirmation, setConfirmation] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const query = useQuery({
+    queryKey: ['exam', id],
+    queryFn: () => api<Exam>(`/instructor/exams/${id}`),
+    enabled: !!id,
+  })
+  const questionsQuery = useQuery({
+    queryKey: ['questions', id],
+    queryFn: () => api<Question[]>(`/instructor/exams/${id}/questions`),
+    enabled: !!id,
+  })
+  const exam = query.data
+  const questions = questionsQuery.data ?? []
+  async function refresh() {
+    await Promise.all([
+      cache.invalidateQueries({ queryKey: ['exam', id] }),
+      cache.invalidateQueries({ queryKey: ['questions', id] }),
+      cache.invalidateQueries({ queryKey: ['exams'] }),
+      cache.invalidateQueries({ queryKey: ['reports'] }),
+    ])
+  }
+  async function action(work: () => Promise<unknown>, message: string) {
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      await work()
+      setEditing(null)
+      setConfirmation(null)
+      await refresh()
+      setNotice(message)
+    } catch (e) {
+      setError((e as Error).message)
+      await refresh()
+    } finally {
+      setBusy(false)
+    }
+  }
+  if (id && (query.isPending || questionsQuery.isPending)) return <Loading />
+  if (query.error || questionsQuery.error)
+    return (
+      <ErrorState
+        error={(query.error ?? questionsQuery.error)!}
+        retry={() => {
+          void refresh()
+        }}
+      />
+    )
+  if (!id)
+    return (
+      <>
+        <PageTitle
+          eyebrow="ASSESSMENT STUDIO / NEW EXAM"
+          title="Create an examination"
+          description="Start with the essentials. You’ll add questions in the next step."
+        />
+        <div className="editor-layout">
+          <section className="panel">
+            <h2>Examination details</h2>
+            <ExamForm
+              submit={async (values) => {
+                const created = await api<Exam>('/instructor/exams', json('POST', values))
+                await cache.invalidateQueries({ queryKey: ['exams'] })
+                navigate(`/exams/${created.id}`)
+              }}
+            />
+          </section>
+          <aside className="editor-guide">
+            <span className="guide-number">01</span>
+            <h2>A thoughtful starting point.</h2>
+            <p>
+              Choose a clear title and share useful instructions. Set enough time for students to
+              read, reflect and review.
+            </p>
+            <ol>
+              <li>Define your examination</li>
+              <li>Build and order questions</li>
+              <li>Review and publish</li>
+            </ol>
+            <p className="hint">Drafts are visible only to you.</p>
+          </aside>
+        </div>
+      </>
+    )
   const draft = exam!.status === 'Draft'
-  return <><div className="breadcrumbs"><Link to="/exams">Examinations</Link><ChevronRight size={14}/><span>Manage assessment</span></div><PageTitle eyebrow="ASSESSMENT STUDIO" title={exam!.title} description="Shape the details, refine your questions, then publish."><div className="actions"><Badge status={exam!.status}/>{draft ? <button className="button" disabled={questions.length === 0 || busy} onClick={() => setConfirmation('publish')}>Review & publish</button> : <button className="button secondary" disabled={busy} onClick={() => setConfirmation('Draft')}>Return to draft</button>}{exam!.status !== 'Closed' && <button className="button secondary" disabled={busy} onClick={() => setConfirmation('Closed')}>Close exam</button>}</div></PageTitle>{error && <p className="notice error" role="alert">{error}</p>}{notice && <p className="notice success" role="status">{notice}</p>}{!draft && <div className="notice"><ShieldCheck size={19}/><span>Published content is protected. Return to draft to prepare a new version. Existing attempts keep their original questions and scoring.</span></div>}{confirmation && !confirmation.startsWith('delete:') && <section className="confirmation" aria-label="Confirm examination action"><h2>{confirmation === 'publish' ? 'Ready to publish?' : confirmation === 'Closed' ? 'Close this examination?' : 'Prepare a new draft?'}</h2><p>{confirmation === 'publish' ? `${questions.length} questions · ${questions.reduce((n, q) => n + q.marks, 0)} marks · ${exam!.durationMinutes} minutes · ${exam!.passingPercentage}% to pass. Students will be able to start immediately.` : confirmation === 'Closed' ? 'New attempts will stop. Students already taking this exam can finish within their original deadline.' : 'This exam will be unavailable for new attempts until you publish again. Existing attempts and results stay intact.'}</p>{confirmation === 'publish' && <label className="checkbox-label"><input type="checkbox" checked={feedback} onChange={e => setFeedback(e.target.checked)}/>Allow question feedback after final submission</label>}<div className="actions"><button className="button" disabled={busy} onClick={() => { void action(() => api(`/instructor/exams/${id}/${confirmation === 'publish' ? 'publish' : 'status'}`, json(confirmation === 'publish' ? 'POST' : 'PUT', confirmation === 'publish' ? { revision: exam!.revision, showFeedback: feedback } : { status: confirmation, revision: exam!.revision })), confirmation === 'publish' ? 'Examination published.' : `Examination moved to ${confirmation}.`) }}>{busy ? 'Updating…' : confirmation === 'publish' ? 'Confirm publish' : 'Confirm change'}</button><button className="button secondary" disabled={busy} onClick={() => setConfirmation(null)}>Cancel</button></div></section>}<div className="editor-layout"><section className="panel"><div className="section-head"><h2>Examination details</h2><Clock3 size={19}/></div><ExamForm key={`${exam!.id}-${exam!.revision}`} exam={exam} submit={async values => { await api(`/instructor/exams/${id}`, json('PUT', { ...values, revision: exam!.revision })); await refresh(); setNotice('Exam details saved.') }}/></section><aside className="editor-guide"><p className="eyebrow">EXAMINATION AT A GLANCE</p><dl className="exam-facts"><div><dt>Questions</dt><dd>{questions.length}<span>/100</span></dd></div><div><dt>Total marks</dt><dd>{questions.reduce((n, q) => n + q.marks, 0)}</dd></div><div><dt>Time limit</dt><dd>{exam!.durationMinutes}<span> min</span></dd></div></dl><TextLink to={`/reports/${id}`}>View performance report</TextLink><p className="hint">One attempt per student. Answers are saved as students work.</p></aside></div><section className="panel question-section" id="questions"><div className="section-head"><div><p className="eyebrow">QUESTION BUILDER</p><h2>Every question counts.</h2></div>{draft && <button className="button secondary" disabled={busy || !!editing || questions.length >= 100} onClick={() => setEditing('new')}><Plus size={17}/>Add question</button>}</div>{editing && <QuestionForm key={editing} question={questions.find(q => q.id === editing)} cancel={() => setEditing(null)} submit={async values => { await api(`/instructor/exams/${id}/questions${editing === 'new' ? '' : '/' + editing}`, json(editing === 'new' ? 'POST' : 'PUT', { ...values, revision: exam!.revision })); setEditing(null); await refresh(); setNotice('Question saved.') }}/>}<div className="question-list">{questions.map((q, i) => <article className="question-row" key={q.id}><div className="question-row-top"><span className="question-order">{String(i + 1).padStart(2, '0')}</span><div><h3>{q.text}</h3><p>{q.marks} marks <span>·</span> Multiple choice</p></div>{draft && <div className="question-actions"><button className="icon-button" aria-label={`Move question ${i + 1} up`} disabled={i === 0 || busy || !!editing} onClick={() => { const ids = questions.map(x => x.id); [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; void action(() => api(`/instructor/exams/${id}/questions/order`, json('PUT', { questionIds: ids, revision: exam!.revision })), 'Question order saved.') }}><ArrowUp size={16}/></button><button className="icon-button" aria-label={`Move question ${i + 1} down`} disabled={i === questions.length - 1 || busy || !!editing} onClick={() => { const ids = questions.map(x => x.id); [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; void action(() => api(`/instructor/exams/${id}/questions/order`, json('PUT', { questionIds: ids, revision: exam!.revision })), 'Question order saved.') }}><ArrowDown size={16}/></button><button className="button secondary small" disabled={busy || !!editing} onClick={() => setEditing(q.id)}>Edit</button><button className="icon-button" aria-label={`Delete question ${i + 1}`} disabled={busy || !!editing} onClick={() => setConfirmation(`delete:${q.id}`)}><Trash2 size={16}/></button></div>}</div>{confirmation === `delete:${q.id}` && <div className="inline-confirm"><p>Remove this question from the draft?</p><button className="button danger small" disabled={busy} onClick={() => { void action(() => api(`/instructor/exams/${id}/questions/${q.id}?revision=${exam!.revision}`, json('DELETE')), 'Question deleted.') }}>Delete question</button><button className="button secondary small" onClick={() => setConfirmation(null)}>Keep question</button></div>}<ol className="answer-preview">{q.choices.map(c => <li key={c.id} className={c.isCorrect ? 'correct' : ''}><span>{String.fromCharCode(64 + c.position)}</span>{c.text}{c.isCorrect && <span className="correct-label"><Check size={14}/>Correct answer</span>}</li>)}</ol></article>)}</div>{questions.length === 0 && !editing && <Empty title="Build your question set"><p>Add clear questions, choose one correct answer and assign marks.</p><FileQuestion size={28}/></Empty>}</section></>
+  return (
+    <>
+      <div className="breadcrumbs">
+        <Link to="/exams">Examinations</Link>
+        <ChevronRight size={14} />
+        <span>Manage assessment</span>
+      </div>
+      <PageTitle
+        eyebrow="ASSESSMENT STUDIO"
+        title={exam!.title}
+        description="Shape the details, refine your questions, then publish."
+      >
+        <div className="actions">
+          <Badge status={exam!.status} />
+          {draft ? (
+            <button
+              className="button"
+              disabled={questions.length === 0 || busy}
+              onClick={() => setConfirmation('publish')}
+            >
+              Review & publish
+            </button>
+          ) : (
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => setConfirmation('Draft')}
+            >
+              Return to draft
+            </button>
+          )}
+          {exam!.status !== 'Closed' && (
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => setConfirmation('Closed')}
+            >
+              Close exam
+            </button>
+          )}
+        </div>
+      </PageTitle>
+      {error && (
+        <p className="notice error" role="alert">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p className="notice success" role="status">
+          {notice}
+        </p>
+      )}
+      {!draft && (
+        <div className="notice">
+          <ShieldCheck size={19} />
+          <span>
+            Published content is protected. Return to draft to prepare a new version. Existing
+            attempts keep their original questions and scoring.
+          </span>
+        </div>
+      )}
+      {confirmation && !confirmation.startsWith('delete:') && (
+        <section className="confirmation" aria-label="Confirm examination action">
+          <h2>
+            {confirmation === 'publish'
+              ? 'Ready to publish?'
+              : confirmation === 'Closed'
+                ? 'Close this examination?'
+                : 'Prepare a new draft?'}
+          </h2>
+          <p>
+            {confirmation === 'publish'
+              ? `${questions.length} questions · ${questions.reduce((n, q) => n + q.marks, 0)} marks · ${exam!.durationMinutes} minutes · ${exam!.passingPercentage}% to pass. Students will be able to start immediately.`
+              : confirmation === 'Closed'
+                ? 'New attempts will stop. Students already taking this exam can finish within their original deadline.'
+                : 'This exam will be unavailable for new attempts until you publish again. Existing attempts and results stay intact.'}
+          </p>
+          {confirmation === 'publish' && (
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={feedback}
+                onChange={(e) => setFeedback(e.target.checked)}
+              />
+              Allow question feedback after final submission
+            </label>
+          )}
+          <div className="actions">
+            <button
+              className="button"
+              disabled={busy}
+              onClick={() => {
+                void action(
+                  () =>
+                    api(
+                      `/instructor/exams/${id}/${confirmation === 'publish' ? 'publish' : 'status'}`,
+                      json(
+                        confirmation === 'publish' ? 'POST' : 'PUT',
+                        confirmation === 'publish'
+                          ? { revision: exam!.revision, showFeedback: feedback }
+                          : { status: confirmation, revision: exam!.revision },
+                      ),
+                    ),
+                  confirmation === 'publish'
+                    ? 'Examination published.'
+                    : `Examination moved to ${confirmation}.`,
+                )
+              }}
+            >
+              {busy
+                ? 'Updating…'
+                : confirmation === 'publish'
+                  ? 'Confirm publish'
+                  : 'Confirm change'}
+            </button>
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => setConfirmation(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </section>
+      )}
+      <div className="editor-layout">
+        <section className="panel">
+          <div className="section-head">
+            <h2>Examination details</h2>
+            <Clock3 size={19} />
+          </div>
+          <ExamForm
+            key={`${exam!.id}-${exam!.revision}`}
+            exam={exam}
+            submit={async (values) => {
+              await api(
+                `/instructor/exams/${id}`,
+                json('PUT', { ...values, revision: exam!.revision }),
+              )
+              await refresh()
+              setNotice('Exam details saved.')
+            }}
+          />
+        </section>
+        <aside className="editor-guide">
+          <p className="eyebrow">EXAMINATION AT A GLANCE</p>
+          <dl className="exam-facts">
+            <div>
+              <dt>Questions</dt>
+              <dd>
+                {questions.length}
+                <span>/100</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Total marks</dt>
+              <dd>{questions.reduce((n, q) => n + q.marks, 0)}</dd>
+            </div>
+            <div>
+              <dt>Time limit</dt>
+              <dd>
+                {exam!.durationMinutes}
+                <span> min</span>
+              </dd>
+            </div>
+          </dl>
+          <TextLink to={`/reports/${id}`}>View performance report</TextLink>
+          <p className="hint">One attempt per student. Answers are saved as students work.</p>
+        </aside>
+      </div>
+      <section className="panel question-section" id="questions">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">QUESTION BUILDER</p>
+            <h2>Every question counts.</h2>
+          </div>
+          {draft && (
+            <button
+              className="button secondary"
+              disabled={busy || !!editing || questions.length >= 100}
+              onClick={() => setEditing('new')}
+            >
+              <Plus size={17} />
+              Add question
+            </button>
+          )}
+        </div>
+        {editing && (
+          <QuestionForm
+            key={editing}
+            question={questions.find((q) => q.id === editing)}
+            cancel={() => setEditing(null)}
+            submit={async (values) => {
+              await api(
+                `/instructor/exams/${id}/questions${editing === 'new' ? '' : '/' + editing}`,
+                json(editing === 'new' ? 'POST' : 'PUT', { ...values, revision: exam!.revision }),
+              )
+              setEditing(null)
+              await refresh()
+              setNotice('Question saved.')
+            }}
+          />
+        )}
+        <div className="question-list">
+          {questions.map((q, i) => (
+            <article className="question-row" key={q.id}>
+              <div className="question-row-top">
+                <span className="question-order">{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3>{q.text}</h3>
+                  <p>
+                    {q.marks} marks <span>·</span> Multiple choice
+                  </p>
+                </div>
+                {draft && (
+                  <div className="question-actions">
+                    <button
+                      className="icon-button"
+                      aria-label={`Move question ${i + 1} up`}
+                      disabled={i === 0 || busy || !!editing}
+                      onClick={() => {
+                        const ids = questions.map((x) => x.id)
+                        ;[ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]
+                        void action(
+                          () =>
+                            api(
+                              `/instructor/exams/${id}/questions/order`,
+                              json('PUT', { questionIds: ids, revision: exam!.revision }),
+                            ),
+                          'Question order saved.',
+                        )
+                      }}
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      className="icon-button"
+                      aria-label={`Move question ${i + 1} down`}
+                      disabled={i === questions.length - 1 || busy || !!editing}
+                      onClick={() => {
+                        const ids = questions.map((x) => x.id)
+                        ;[ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]
+                        void action(
+                          () =>
+                            api(
+                              `/instructor/exams/${id}/questions/order`,
+                              json('PUT', { questionIds: ids, revision: exam!.revision }),
+                            ),
+                          'Question order saved.',
+                        )
+                      }}
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                    <button
+                      className="button secondary small"
+                      disabled={busy || !!editing}
+                      onClick={() => setEditing(q.id)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="icon-button"
+                      aria-label={`Delete question ${i + 1}`}
+                      disabled={busy || !!editing}
+                      onClick={() => setConfirmation(`delete:${q.id}`)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {confirmation === `delete:${q.id}` && (
+                <div className="inline-confirm">
+                  <p>Remove this question from the draft?</p>
+                  <button
+                    className="button danger small"
+                    disabled={busy}
+                    onClick={() => {
+                      void action(
+                        () =>
+                          api(
+                            `/instructor/exams/${id}/questions/${q.id}?revision=${exam!.revision}`,
+                            json('DELETE'),
+                          ),
+                        'Question deleted.',
+                      )
+                    }}
+                  >
+                    Delete question
+                  </button>
+                  <button className="button secondary small" onClick={() => setConfirmation(null)}>
+                    Keep question
+                  </button>
+                </div>
+              )}
+              <ol className="answer-preview">
+                {q.choices.map((c) => (
+                  <li key={c.id} className={c.isCorrect ? 'correct' : ''}>
+                    <span>{String.fromCharCode(64 + c.position)}</span>
+                    {c.text}
+                    {c.isCorrect && (
+                      <span className="correct-label">
+                        <Check size={14} />
+                        Correct answer
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </article>
+          ))}
+        </div>
+        {questions.length === 0 && !editing && (
+          <Empty title="Build your question set">
+            <p>Add clear questions, choose one correct answer and assign marks.</p>
+            <FileQuestion size={28} />
+          </Empty>
+        )}
+      </section>
+    </>
+  )
 }
 export function InstructorReports() {
-  const { examId } = useParams(); const query = useReport(examId)
-  if (query.isPending) return <Loading/>; if (query.error) return <ErrorState error={query.error} retry={() => { void query.refetch() }}/>
+  const { examId } = useParams()
+  const query = useReport(examId)
+  if (query.isPending) return <Loading />
+  if (query.error)
+    return (
+      <ErrorState
+        error={query.error}
+        retry={() => {
+          void query.refetch()
+        }}
+      />
+    )
   const report = query.data
-  return <><PageTitle eyebrow="REPORTS & INSIGHTS" title={examId ? report.exams[0]?.title ?? 'Exam performance' : 'A clearer picture of performance.'} description="Results from completed attempts, scoped to your examinations.">{examId && <Link className="button secondary" to="/reports">All reports</Link>}</PageTitle><Metrics report={report}/><div className="reports-grid"><Distribution report={report}/><section className="report-context"><p className="eyebrow">READING YOUR RESULTS</p><h2>Progress is more than a number.</h2><p>{report.completedAttempts} of {report.totalAttempts} attempts are complete. Use individual summaries to understand where learners are confident and where they need support.</p><p className="hint">Averages use percentages from completed attempts. Unanswered questions earn zero marks.</p></section></div><section><div className="section-head"><h2>{examId ? 'Individual attempts' : 'Examination performance'}</h2><span className="muted">{examId ? report.attempts?.length ?? 0 : report.exams.length} records</span></div><div className="table-wrap"><table><thead><tr>{examId ? <><th>Student</th><th>Status</th><th>Score</th><th>Completed</th><th>Summary</th></> : <><th>Examination</th><th>Attempts</th><th>Completed</th><th>Average</th><th>Pass rate</th><th>Report</th></>}</tr></thead><tbody>{examId ? report.attempts?.map(a => <tr key={a.id}><td className="table-title">{a.studentName}<small>Version {a.versionNumber}</small></td><td><Badge status={a.result ? a.result.passed ? 'Passed' : 'Failed' : a.status}/></td><td>{a.result ? `${a.result.earnedMarks}/${a.result.totalMarks} · ${a.result.percentage}%` : 'In progress'}</td><td>{a.completedAt ? date(a.completedAt) : 'Not yet completed'}</td><td>{a.result && <TextLink to={`/reports/attempts/${a.id}`}>View summary</TextLink>}</td></tr>) : report.exams.map(e => <tr key={e.id}><td><Link className="table-title" to={`/reports/${e.id}`}>{e.title}</Link><small><Badge status={e.status}/></small></td><td>{e.attempts}</td><td>{e.completed}</td><td>{e.averagePercentage}%</td><td>{e.passRate}%</td><td><TextLink to={`/reports/${e.id}`}>View report</TextLink></td></tr>)}</tbody></table></div>{(examId ? report.attempts?.length === 0 : report.exams.length === 0) && <Empty title="No performance records yet"><p>Publish an exam and invite students to begin.</p></Empty>}</section></>
+  return (
+    <>
+      <PageTitle
+        eyebrow="REPORTS & INSIGHTS"
+        title={
+          examId
+            ? (report.exams[0]?.title ?? 'Exam performance')
+            : 'A clearer picture of performance.'
+        }
+        description="Results from completed attempts, scoped to your examinations."
+      >
+        {examId && (
+          <Link className="button secondary" to="/reports">
+            All reports
+          </Link>
+        )}
+      </PageTitle>
+      <Metrics report={report} />
+      <div className="reports-grid">
+        <Distribution report={report} />
+        <section className="report-context">
+          <p className="eyebrow">READING YOUR RESULTS</p>
+          <h2>Progress is more than a number.</h2>
+          <p>
+            {report.completedAttempts} of {report.totalAttempts} attempts are complete. Use
+            individual summaries to understand where learners are confident and where they need
+            support.
+          </p>
+          <p className="hint">
+            Averages use percentages from completed attempts. Unanswered questions earn zero marks.
+          </p>
+        </section>
+      </div>
+      <section>
+        <div className="section-head">
+          <h2>{examId ? 'Individual attempts' : 'Examination performance'}</h2>
+          <span className="muted">
+            {examId ? (report.attempts?.length ?? 0) : report.exams.length} records
+          </span>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                {examId ? (
+                  <>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Completed</th>
+                    <th>Summary</th>
+                  </>
+                ) : (
+                  <>
+                    <th>Examination</th>
+                    <th>Attempts</th>
+                    <th>Completed</th>
+                    <th>Average</th>
+                    <th>Pass rate</th>
+                    <th>Report</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {examId
+                ? report.attempts?.map((a) => (
+                    <tr key={a.id}>
+                      <td className="table-title">
+                        {a.studentName}
+                        <small>Version {a.versionNumber}</small>
+                      </td>
+                      <td>
+                        <Badge
+                          status={a.result ? (a.result.passed ? 'Passed' : 'Failed') : a.status}
+                        />
+                      </td>
+                      <td>
+                        {a.result
+                          ? `${a.result.earnedMarks}/${a.result.totalMarks} · ${a.result.percentage}%`
+                          : 'In progress'}
+                      </td>
+                      <td>{a.completedAt ? date(a.completedAt) : 'Not yet completed'}</td>
+                      <td>
+                        {a.result && (
+                          <TextLink to={`/reports/attempts/${a.id}`}>View summary</TextLink>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                : report.exams.map((e) => (
+                    <tr key={e.id}>
+                      <td>
+                        <Link className="table-title" to={`/reports/${e.id}`}>
+                          {e.title}
+                        </Link>
+                        <small>
+                          <Badge status={e.status} />
+                        </small>
+                      </td>
+                      <td>{e.attempts}</td>
+                      <td>{e.completed}</td>
+                      <td>{e.averagePercentage}%</td>
+                      <td>{e.passRate}%</td>
+                      <td>
+                        <TextLink to={`/reports/${e.id}`}>View report</TextLink>
+                      </td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
+        </div>
+        {(examId ? report.attempts?.length === 0 : report.exams.length === 0) && (
+          <Empty title="No performance records yet">
+            <p>Publish an exam and invite students to begin.</p>
+          </Empty>
+        )}
+      </section>
+    </>
+  )
 }

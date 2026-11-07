@@ -3,6 +3,7 @@ using Aperture.Api.Exams;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 namespace Aperture.Api.Data;
+
 public static class DemoSeed
 {
     public static async Task Run(IServiceProvider services)
@@ -50,8 +51,18 @@ public static class DemoSeed
             var questions = items.Select((item, i) => new Question { ExamId = exam.Id, Text = item.Item1, Marks = 5, Position = i + 1, Choices = new[] { item.Item2, item.Item3, item.Item4, item.Item5 }.Select((text, j) => new Choice { Text = text, Position = j + 1, IsCorrect = j == 0 }).ToList() }).ToList();
             db.Questions.AddRange(questions);
             if (index == 2) continue;
-            var version = new ExamVersion { ExamId = exam.Id, Number = 1, Title = title, Description = description, DurationMinutes = 30, PassingPercentage = 60, PublishedAt = now.AddDays(-3 + index), ShowFeedback = true,
-                Questions = questions.Select(q => new VersionQuestion { Text = q.Text, Marks = q.Marks, Position = q.Position, Choices = q.Choices.Select(c => new VersionChoice { Text = c.Text, Position = c.Position, IsCorrect = c.IsCorrect }).ToList() }).ToList() };
+            var version = new ExamVersion
+            {
+                ExamId = exam.Id,
+                Number = 1,
+                Title = title,
+                Description = description,
+                DurationMinutes = 30,
+                PassingPercentage = 60,
+                PublishedAt = now.AddDays(-3 + index),
+                ShowFeedback = true,
+                Questions = questions.Select(q => new VersionQuestion { Text = q.Text, Marks = q.Marks, Position = q.Position, Choices = q.Choices.Select(c => new VersionChoice { Text = c.Text, Position = c.Position, IsCorrect = c.IsCorrect }).ToList() }).ToList()
+            };
             db.ExamVersions.Add(version); await db.SaveChangesAsync();
             for (var s = 0; s < students.Count; s++)
             {
