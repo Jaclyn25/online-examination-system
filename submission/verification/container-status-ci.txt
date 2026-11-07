@@ -1,0 +1,4 @@
+NAME             IMAGE                COMMAND                  SERVICE   CREATED          STATUS                            PORTS
+aperture-api-1   aperture-api         "dotnet Aperture.Api…"   api       25 seconds ago   Up 2 seconds (health: starting)   8080/tcp
+aperture-db-1    postgres:17-alpine   "docker-entrypoint.s…"   db        25 seconds ago   Up 25 seconds (healthy)           127.0.0.1:54331->5432/tcp
+aperture-web-1   aperture-web         "/docker-entrypoint.…"   web       25 seconds ago   Up 14 seconds (healthy)           127.0.0.1:18082->80/tcp

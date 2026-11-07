@@ -1,0 +1,47 @@
+[
+  {
+    "Name": "aperture-api-1",
+    "Service": "api",
+    "Image": "aperture-api",
+    "State": "running",
+    "Health": "healthy",
+    "Publishers": [
+      {
+        "URL": "",
+        "TargetPort": 8080,
+        "PublishedPort": 0,
+        "Protocol": "tcp"
+      }
+    ]
+  },
+  {
+    "Name": "aperture-db-1",
+    "Service": "db",
+    "Image": "postgres:17-alpine",
+    "State": "running",
+    "Health": "healthy",
+    "Publishers": [
+      {
+        "URL": "127.0.0.1",
+        "TargetPort": 5432,
+        "PublishedPort": 54331,
+        "Protocol": "tcp"
+      }
+    ]
+  },
+  {
+    "Name": "aperture-web-1",
+    "Service": "web",
+    "Image": "aperture-web",
+    "State": "running",
+    "Health": "healthy",
+    "Publishers": [
+      {
+        "URL": "127.0.0.1",
+        "TargetPort": 80,
+        "PublishedPort": 18082,
+        "Protocol": "tcp"
+      }
+    ]
+  }
+]

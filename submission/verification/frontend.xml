@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="16" failures="0" errors="0" time="1.747486371">
+    <testsuite name="src/AuthPage.test.tsx" timestamp="2026-11-07T19:01:08.317Z" hostname="runnervm7aw5e" tests="5" failures="0" errors="0" skipped="0" time="0.61691748">
+        <testcase classname="src/AuthPage.test.tsx" name="Authentication forms &gt; validates login fields" time="0.218330834">
+        </testcase>
+        <testcase classname="src/AuthPage.test.tsx" name="Authentication forms &gt; submits a student registration with no role field" time="0.229486053">
+        </testcase>
+        <testcase classname="src/AuthPage.test.tsx" name="Authentication forms &gt; shows server authentication errors" time="0.113136765">
+        </testcase>
+        <testcase classname="src/AuthPage.test.tsx" name="Authentication forms &gt; rejects weak registration passwords" time="0.025253917">
+        </testcase>
+        <testcase classname="src/AuthPage.test.tsx" name="presents loading and retry states accessibly" time="0.026674385">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/ExamForm.test.tsx" timestamp="2026-11-07T19:01:08.318Z" hostname="runnervm7aw5e" tests="3" failures="0" errors="0" skipped="0" time="0.620397439">
+        <testcase classname="src/ExamForm.test.tsx" name="requires an exam title and valid duration" time="0.241676953">
+        </testcase>
+        <testcase classname="src/ExamForm.test.tsx" name="submits valid examination configuration" time="0.112165245">
+        </testcase>
+        <testcase classname="src/ExamForm.test.tsx" name="requires exactly one correct answer and supports choice editing" time="0.26224517">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/Player.test.tsx" timestamp="2026-11-07T19:01:08.319Z" hostname="runnervm7aw5e" tests="5" failures="0" errors="0" skipped="0" time="0.499488772">
+        <testcase classname="src/Player.test.tsx" name="navigates questions and persists selection through the save callback" time="0.289416374">
+        </testcase>
+        <testcase classname="src/Player.test.tsx" name="requires final submission confirmation and identifies unanswered questions" time="0.102026902">
+        </testcase>
+        <testcase classname="src/Player.test.tsx" name="shows saved selections and answer indicators" time="0.054933519">
+        </testcase>
+        <testcase classname="src/Player.test.tsx" name="counts down from server time and fires expiration once" time="0.01209906">
+        </testcase>
+        <testcase classname="src/Player.test.tsx" name="presents correct server score and result breakdown" time="0.037052116">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/api.test.ts" timestamp="2026-11-07T19:01:08.320Z" hostname="runnervm7aw5e" tests="3" failures="0" errors="0" skipped="0" time="0.01068268">
+        <testcase classname="src/api.test.ts" name="adds a fresh antiforgery token to writes and keeps credentials same-origin" time="0.005087061">
+        </testcase>
+        <testcase classname="src/api.test.ts" name="surfaces validation errors from the server" time="0.001949263">
+        </testcase>
+        <testcase classname="src/api.test.ts" name="preserves unauthorized status for session recovery" time="0.001088579">
+        </testcase>
+    </testsuite>
+</testsuites>
