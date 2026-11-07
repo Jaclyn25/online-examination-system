@@ -9,6 +9,17 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: aperture
+          POSTGRES_USER: aperture
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U aperture" --health-interval 5s --health-timeout 5s --health-retries 15
+    env:
+      EXAMS_TEST_CONNECTION: Host=localhost;Database=aperture;Username=aperture
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-dotnet@v6.1.0
