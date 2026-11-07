@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "base": "http://127.0.0.1:18082",
+  "product": "Aperture Exams",
+  "restartSessionVerified": true,
+  "checks": [
+    "web",
+    "PostgreSQL health",
+    "OpenAPI",
+    "anonymous denial",
+    "registration",
+    "login",
+    "role denial",
+    "protected question payload",
+    "server scoring",
+    "duplicate submission",
+    "logout"
+  ],
+  "verifiedAt": "2026-11-07T18:59:35.897Z"
+}

@@ -1,0 +1,79 @@
+{
+  "base": "http://127.0.0.1:18083",
+  "product": "Aperture Exams",
+  "source": "Running production Docker application with fictional seeded data and a real student attempt",
+  "captures": [
+    {
+      "file": "login.png",
+      "capturedAt": "2026-11-07T19:07:06.794Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "file": "student-exam-player.png",
+      "capturedAt": "2026-11-07T19:07:08.202Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      }
+    },
+    {
+      "file": "results.png",
+      "capturedAt": "2026-11-07T19:07:08.894Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      }
+    },
+    {
+      "file": "mobile.png",
+      "capturedAt": "2026-11-07T19:07:09.850Z",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "mobile-navigation.png",
+      "capturedAt": "2026-11-07T19:07:09.904Z",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "instructor-dashboard.png",
+      "capturedAt": "2026-11-07T19:07:10.868Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1200
+      }
+    },
+    {
+      "file": "exam-management.png",
+      "capturedAt": "2026-11-07T19:07:11.011Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1200
+      }
+    },
+    {
+      "file": "question-editor.png",
+      "capturedAt": "2026-11-07T19:13:29.376Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1200
+      }
+    },
+    {
+      "file": "reports.png",
+      "capturedAt": "2026-11-07T19:07:12.856Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1400
+      }
+    }
+  ]
+}
