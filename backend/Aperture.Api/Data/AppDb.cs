@@ -14,9 +14,27 @@ public class AppDb(DbContextOptions<AppDb> options) : IdentityDbContext<AppUser>
     public DbSet<Aperture.Api.Exams.ExamVersion> ExamVersions => Set<Aperture.Api.Exams.ExamVersion>();
     public DbSet<Aperture.Api.Exams.VersionQuestion> VersionQuestions => Set<Aperture.Api.Exams.VersionQuestion>();
     public DbSet<Aperture.Api.Exams.VersionChoice> VersionChoices => Set<Aperture.Api.Exams.VersionChoice>();
+    public DbSet<Aperture.Api.Attempts.Attempt> Attempts => Set<Aperture.Api.Attempts.Attempt>();
+    public DbSet<Aperture.Api.Attempts.StudentAnswer> StudentAnswers => Set<Aperture.Api.Attempts.StudentAnswer>();
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        b.Entity<Aperture.Api.Attempts.Attempt>(e =>
+        {
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Aperture.Api.Exams.Exam>().WithMany().HasForeignKey(x => x.ExamId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Aperture.Api.Exams.ExamVersion>().WithMany().HasForeignKey(x => x.ExamVersionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.ExamId, x.StudentId }).IsUnique();
+            e.HasIndex(x => new { x.Status, x.Deadline });
+            e.ToTable("Attempts", t => { t.HasCheckConstraint("CK_Attempt_Status", "\"Status\" IN ('Active','Submitted','Expired')"); t.HasCheckConstraint("CK_Attempt_Deadline", "\"Deadline\" > \"StartedAt\""); });
+        });
+        b.Entity<Aperture.Api.Attempts.StudentAnswer>(e =>
+        {
+            e.HasKey(x => new { x.AttemptId, x.VersionQuestionId });
+            e.HasOne<Aperture.Api.Attempts.Attempt>().WithMany(a => a.Answers).HasForeignKey(x => x.AttemptId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Aperture.Api.Exams.VersionQuestion>().WithMany().HasForeignKey(x => x.VersionQuestionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Aperture.Api.Exams.VersionChoice>().WithMany().HasForeignKey(x => x.VersionChoiceId).OnDelete(DeleteBehavior.Restrict);
+        });
         b.Entity<Aperture.Api.Exams.ExamVersion>(e =>
         {
             e.Property(x => x.Title).HasMaxLength(160); e.Property(x => x.Description).HasMaxLength(4000);

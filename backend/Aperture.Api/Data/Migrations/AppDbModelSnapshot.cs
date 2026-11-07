@@ -22,6 +22,80 @@ namespace Aperture.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Aperture.Api.Attempts.Attempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("Deadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ExamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExamVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamVersionId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("ExamId", "StudentId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "Deadline");
+
+                    b.ToTable("Attempts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Attempt_Deadline", "\"Deadline\" > \"StartedAt\"");
+
+                            t.HasCheckConstraint("CK_Attempt_Status", "\"Status\" IN ('Active','Submitted','Expired')");
+                        });
+                });
+
+            modelBuilder.Entity("Aperture.Api.Attempts.StudentAnswer", b =>
+                {
+                    b.Property<Guid>("AttemptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VersionQuestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("SavedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("VersionChoiceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("AttemptId", "VersionQuestionId");
+
+                    b.HasIndex("VersionChoiceId");
+
+                    b.HasIndex("VersionQuestionId");
+
+                    b.ToTable("StudentAnswers");
+                });
+
             modelBuilder.Entity("Aperture.Api.Data.AppUser", b =>
                 {
                     b.Property<string>("Id")
@@ -449,6 +523,47 @@ namespace Aperture.Api.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Aperture.Api.Attempts.Attempt", b =>
+                {
+                    b.HasOne("Aperture.Api.Exams.Exam", null)
+                        .WithMany()
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Aperture.Api.Exams.ExamVersion", null)
+                        .WithMany()
+                        .HasForeignKey("ExamVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Aperture.Api.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Attempts.StudentAnswer", b =>
+                {
+                    b.HasOne("Aperture.Api.Attempts.Attempt", null)
+                        .WithMany("Answers")
+                        .HasForeignKey("AttemptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Aperture.Api.Exams.VersionChoice", null)
+                        .WithMany()
+                        .HasForeignKey("VersionChoiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Aperture.Api.Exams.VersionQuestion", null)
+                        .WithMany()
+                        .HasForeignKey("VersionQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Aperture.Api.Exams.Choice", b =>
                 {
                     b.HasOne("Aperture.Api.Exams.Question", null)
@@ -552,6 +667,11 @@ namespace Aperture.Api.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Attempts.Attempt", b =>
+                {
+                    b.Navigation("Answers");
                 });
 
             modelBuilder.Entity("Aperture.Api.Exams.ExamVersion", b =>
