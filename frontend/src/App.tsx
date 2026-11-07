@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { BookOpen, ChartNoAxesCombined, LayoutDashboard, LogOut, Menu, History, UserRound } from 'lucide-react'
@@ -6,6 +6,11 @@ import { AuthPage } from './AuthPage'
 import { api, json } from './api'
 import { Brand, Empty, ErrorState, Loading, PageTitle } from './components'
 import { useSession } from './session'
+const InstructorHome = lazy(() => import('./Instructor').then(m => ({ default: m.InstructorHome })))
+const ExamList = lazy(() => import('./Instructor').then(m => ({ default: m.ExamList })))
+const ExamEditor = lazy(() => import('./Instructor').then(m => ({ default: m.ExamEditor })))
+const InstructorReports = lazy(() => import('./Instructor').then(m => ({ default: m.InstructorReports })))
+import type { ReactNode } from 'react'
 function Shell() {
   const { user, loading, error } = useSession(); const [open, setOpen] = useState(false); const [logoutError, setLogoutError] = useState<Error | null>(null); const navigate = useNavigate(); const cache = useQueryClient()
   if (loading) return <Loading/>
@@ -16,4 +21,6 @@ function Shell() {
 }
 function Overview() { const { user } = useSession(); return <><PageTitle eyebrow="YOUR WORKSPACE" title={`Good to see you, ${user!.displayName.split(' ')[0]}.`} description="A clear view of your assessments and progress."/><Empty title="Your workspace is ready"><p>Use the navigation to manage your assessments and account.</p></Empty></> }
 function Profile() { const { user } = useSession(); return <><PageTitle eyebrow="ACCOUNT" title="My profile" description="Your authenticated workspace identity."/><dl className="profile panel"><dt>Full name</dt><dd>{user!.displayName}</dd><dt>Email address</dt><dd>{user!.email}</dd><dt>Account role</dt><dd>{user!.role}</dd><dt>Session</dt><dd>Protected with an HttpOnly session cookie</dd></dl></> }
-export default function App() { return <Routes><Route path="/login" element={<AuthPage/>}/><Route path="/register" element={<AuthPage registerMode/>}/><Route element={<Shell/>}><Route index element={<Overview/>}/><Route path="profile" element={<Profile/>}/><Route path="*" element={<Empty title="Page unavailable"><p>Choose a page from the workspace navigation.</p></Empty>}/></Route></Routes> }
+function Home() { const { user } = useSession(); return user?.role === 'Instructor' ? <InstructorHome/> : <Overview/> }
+export function RoleGate({ role, children }: { role: string; children: ReactNode }) { const { user } = useSession(); return user?.role === role ? children : <ErrorState error={new Error('Your account cannot access this workspace. Choose a page from your navigation.')}/> }
+export default function App() { return <Suspense fallback={<Loading/>}><Routes><Route path="/login" element={<AuthPage/>}/><Route path="/register" element={<AuthPage registerMode/>}/><Route element={<Shell/>}><Route index element={<Home/>}/><Route path="profile" element={<Profile/>}/><Route path="exams" element={<RoleGate role="Instructor"><ExamList/></RoleGate>}/><Route path="exams/new" element={<RoleGate role="Instructor"><ExamEditor/></RoleGate>}/><Route path="exams/:id" element={<RoleGate role="Instructor"><ExamEditor/></RoleGate>}/><Route path="reports" element={<RoleGate role="Instructor"><InstructorReports/></RoleGate>}/><Route path="reports/:examId" element={<RoleGate role="Instructor"><InstructorReports/></RoleGate>}/><Route path="*" element={<Empty title="Page unavailable"><p>Choose a page from the workspace navigation.</p></Empty>}/></Route></Routes></Suspense> }
