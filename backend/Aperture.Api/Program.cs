@@ -4,6 +4,7 @@ using Aperture.Api.Data;
 using Aperture.Api.Infrastructure;
 using Aperture.Api.Exams;
 using Aperture.Api.Attempts;
+using Aperture.Api.Reports;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AttemptService>();
+builder.Services.AddScoped<ReportService>();
 if (!builder.Environment.IsEnvironment("Testing")) builder.Services.AddHostedService<ExpirationWorker>();
 builder.Services.AddDbContext<AppDb>(o => o.UseNpgsql(builder.Configuration.GetConnectionString("Exams") ?? throw new InvalidOperationException("ConnectionStrings:Exams is required.")));
 builder.Services.AddIdentity<AppUser, IdentityRole>(o =>
@@ -73,12 +75,14 @@ app.MapExams();
 app.MapQuestions();
 app.MapPublishing();
 app.MapAttempts();
+app.MapReports();
 app.MapGet("/api/health", async (AppDb db) => await db.Database.CanConnectAsync() ? Results.Ok(new { status = "healthy", product = "Aperture Exams" }) : Results.StatusCode(503));
 if (app.Configuration.GetValue<bool>("Database:Migrate"))
 {
     using var scope = app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<AppDb>().Database.MigrateAsync();
     await AuthEndpoints.InitializeIdentity(app.Services, app.Configuration, app.Environment);
+    if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Demo:Enabled") && app.Configuration.GetValue<bool>("Database:Seed")) await DemoSeed.Run(app.Services);
 }
 app.Run();
 public partial class Program;

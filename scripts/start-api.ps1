@@ -4,6 +4,7 @@ Get-Content (Join-Path (Split-Path $PSScriptRoot -Parent) '.env') | ForEach-Obje
 }
 $env:ConnectionStrings__Exams = "Host=127.0.0.1;Port=54331;Database=aperture;Username=aperture;Password=$env:POSTGRES_PASSWORD"
 $env:Database__Migrate = 'true'
+$env:Database__Seed = 'true'
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
 $env:Demo__Enabled = 'true'
 $env:Demo__InstructorPassword = $env:DEMO_INSTRUCTOR_PASSWORD
