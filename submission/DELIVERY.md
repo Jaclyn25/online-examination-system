@@ -2,6 +2,8 @@
 
 Existing repository: [Jaclyn25/online-examination-system](https://github.com/Jaclyn25/online-examination-system). It was empty and private at inspection. One empty baseline commit initialized `main` so implementation could proceed through pull requests. No repository creation or visibility change was performed.
 
+**Final visibility discrepancy:** GitHub's final read reports `private: false`, `visibility: public`, unlike the initial `isPrivate: true`. No repository visibility mutation was issued during this work. The explicit instruction not to change visibility remains in force, so the owner must resolve this external-state discrepancy. Application services remain bound to loopback; this is not a public application deployment.
+
 Each feature branch began from synchronized `main`, was locally validated and reviewed for its relevant security/data behavior, and merged only after its final CI/security checks passed. `main` was never force-pushed. The Library and Inventory repositories were read as quality references and not modified.
 
 | Branch | Pull request | Scope |

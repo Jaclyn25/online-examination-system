@@ -15,6 +15,7 @@ Verified **7 November 2026**. Results below describe executed tests and real run
 | Session persistence after API restart | Pass | `restartSessionVerified: true` in smoke evidence |
 | npm / NuGet audit | No known advisories reported by the executed audits | `verification/npm-audit.json`, `nuget-audit.json` |
 | Actual screenshots | Nine captured and visually inspected | `docs/screenshots/` and its capture record |
+| Repository privacy observation | Initially private; final GitHub read reports public; not changed by this implementation | `verification/repository-state.json`; delivery record |
 
 Verified complete application-code CI: [Validation run 42404079799](https://github.com/Jaclyn25/online-examination-system/actions/runs/42404079799), PR #13. Backend, frontend, Chromium, container/restart and GitGuardian checks passed. The subsequent documentation PR and final main push have their own complete workflow; the final run is linked in the completion report and available in [workflow history](https://github.com/Jaclyn25/online-examination-system/actions/workflows/ci.yml).
 

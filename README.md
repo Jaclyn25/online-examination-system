@@ -96,10 +96,11 @@ Generate a source-only ZIP and SHA-256 checksum after checking out the delivery 
 ./scripts/package-source.ps1
 ```
 
-The package uses `git archive`, includes committed documentation/screenshots/evidence and excludes local secrets, database volumes, dependencies, build outputs and browser traces. Nothing is submitted to Auspify automatically. The existing repository remains private; its visibility was not changed.
+The package uses `git archive`, includes committed documentation/screenshots/evidence and excludes local secrets, database volumes, dependencies, build outputs and browser traces. Nothing is submitted to Auspify automatically. The repository was private at initial inspection, but GitHub reported it as public during final verification. No visibility change was performed by this implementation; the owner needs to resolve this discrepancy.
 
 ## Policy and limitations
 
+- GitHub's final repository visibility differs from the initial private state. The instruction not to change visibility has been preserved; see the delivery record.
 - Multiple-choice, single-correct-answer exams only; one lifetime attempt per student/exam, including across republished versions. Retakes require a separate exam.
 - Publishing makes an exam available immediately. Closing prevents new attempts; active attempts retain their original deadline. Scheduling, proctoring and randomized question banks are outside this task.
 - Only confirmed saved answers are recoverable. Offline edits are not queued; the timer continues during disconnection. Flags are a local review aid and are not persisted across refreshes.

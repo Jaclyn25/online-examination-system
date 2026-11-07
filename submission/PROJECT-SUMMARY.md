@@ -1,6 +1,6 @@
 # Task 5 delivery: Aperture Exams
 
-**Project:** Online Examination System, Auspify Technologies Internship. **Repository:** [Jaclyn25/online-examination-system](https://github.com/Jaclyn25/online-examination-system), existing/private. **Local application:** [localhost:18082](http://127.0.0.1:18082).
+**Project:** Online Examination System, Auspify Technologies Internship. **Repository:** [Jaclyn25/online-examination-system](https://github.com/Jaclyn25/online-examination-system), existing and private at initial inspection. GitHub reported public visibility at final verification; no visibility change was performed by this implementation. **Local application:** [localhost:18082](http://127.0.0.1:18082).
 
 The company's corrected requirements replace the unrelated original PDF workflow. All five corrected areas are implemented end to end:
 
