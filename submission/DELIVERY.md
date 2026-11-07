@@ -19,8 +19,9 @@ Each feature branch began from synchronized `main`, was locally validated and re
 | `feat/student-exam-player` | [#11](https://github.com/Jaclyn25/online-examination-system/pull/11) | Focused player, history, results and shared instructor summaries |
 | `test/security-and-critical-flows` | [#12](https://github.com/Jaclyn25/online-examination-system/pull/12) | Session revocation, history guards, hostile input and four real browser flows |
 | `chore/container-validation` | [#13](https://github.com/Jaclyn25/online-examination-system/pull/13) | Full-stack Docker, CSP, key persistence and authenticated CI smoke/restart |
+| `docs/submission-package` | [#14](https://github.com/Jaclyn25/online-examination-system/pull/14) | Complete documentation, nine actual screenshots, verification evidence and reproducible source packaging |
 
-The documentation/submission branch delivers this package, actual screenshots and source packaging script; its PR link is recorded when opened. Final merged-main validation is reported in the completion report rather than creating a self-referencing commit/run record.
+Final merged-main validation is reported in the completion report rather than creating a self-referencing commit/run record.
 
 All branches use the requested names without `codex/`. Two feature commits were amended and updated with `--force-with-lease` solely to remove secret-scanner false positives; `main` was not rewritten and final scans passed. Intermittent GitHub/package download failures were retried with completed work preserved. npm's local resolver graph was repaired and normal `npm ci` is used in CI.
 
