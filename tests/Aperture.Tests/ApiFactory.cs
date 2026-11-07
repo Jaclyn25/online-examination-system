@@ -16,10 +16,12 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private readonly string database = "aperture_test_" + Guid.NewGuid().ToString("N");
     private readonly string connection = Environment.GetEnvironmentVariable("EXAMS_TEST_CONNECTION") ?? throw new InvalidOperationException("EXAMS_TEST_CONNECTION is required; tests use real PostgreSQL.");
     public string TestConnection => new NpgsqlConnectionStringBuilder(connection) { Database = database }.ToString();
+    public MutableClock Clock { get; } = new();
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.ConfigureAppConfiguration((_, c) => c.AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:Exams"] = TestConnection, ["Database:Migrate"] = "false" }));
+        builder.ConfigureAppConfiguration((_, c) => c.AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:Exams"] = TestConnection, ["Database:Migrate"] = "false", ["RateLimits:Auth"] = "1000" }));
+        builder.ConfigureServices(s => s.AddSingleton<TimeProvider>(Clock));
     }
     public async Task InitializeAsync()
     {
@@ -69,4 +71,10 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         public string ContentRootPath { get; set; } = "";
         public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = new Microsoft.Extensions.FileProviders.NullFileProvider();
     }
+}
+public class MutableClock : TimeProvider
+{
+    private long ticks = DateTimeOffset.UtcNow.UtcTicks;
+    public override DateTimeOffset GetUtcNow() => new(Interlocked.Read(ref ticks), TimeSpan.Zero);
+    public void Advance(TimeSpan amount) => Interlocked.Add(ref ticks, amount.Ticks);
 }

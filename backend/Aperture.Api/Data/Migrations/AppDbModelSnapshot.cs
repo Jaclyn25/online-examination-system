@@ -73,6 +73,43 @@ namespace Aperture.Api.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Aperture.Api.Attempts.AttemptResult", b =>
+                {
+                    b.Property<Guid>("AttemptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CorrectCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EarnedMarks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IncorrectCount")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<int>("TotalMarks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnansweredCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AttemptId");
+
+                    b.ToTable("Results", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Result_Marks", "\"TotalMarks\" > 0 AND \"EarnedMarks\" BETWEEN 0 AND \"TotalMarks\"");
+
+                            t.HasCheckConstraint("CK_Result_Percentage", "\"Percentage\" BETWEEN 0 AND 100");
+                        });
+                });
+
             modelBuilder.Entity("Aperture.Api.Attempts.StudentAnswer", b =>
                 {
                     b.Property<Guid>("AttemptId")
@@ -540,6 +577,15 @@ namespace Aperture.Api.Data.Migrations
                     b.HasOne("Aperture.Api.Data.AppUser", null)
                         .WithMany()
                         .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Aperture.Api.Attempts.AttemptResult", b =>
+                {
+                    b.HasOne("Aperture.Api.Attempts.Attempt", null)
+                        .WithOne()
+                        .HasForeignKey("Aperture.Api.Attempts.AttemptResult", "AttemptId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
