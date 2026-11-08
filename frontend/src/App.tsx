@@ -50,6 +50,11 @@ function Shell() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
+      <div
+        className={`sidebar-backdrop ${open ? 'active' : ''}`}
+        aria-hidden="true"
+        onClick={() => setOpen(false)}
+      />
       <aside className="sidebar" id="workspace-navigation" data-open={open}>
         <Brand />
         <p className="nav-caption">{instructor ? 'TEACHING WORKSPACE' : 'LEARNING WORKSPACE'}</p>
