@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { api, json } from './api'
 import { Brand, Loading } from './components'
 import { useSession } from './session'
@@ -33,6 +33,7 @@ export function AuthForm({
   submit: (values: AuthValues) => Promise<void>
 }) {
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -87,14 +88,24 @@ export function AuthForm({
       </div>
       <div className="field">
         <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          autoComplete={registerMode ? 'new-password' : 'current-password'}
-          {...register('password')}
-          aria-invalid={!!errors.password}
-          aria-describedby="password-help password-error"
-        />
+        <div className="password-input-wrap">
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete={registerMode ? 'new-password' : 'current-password'}
+            {...register('password')}
+            aria-invalid={!!errors.password}
+            aria-describedby="password-help password-error"
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
         {registerMode && (
           <p className="hint" id="password-help">
             At least 12 characters, with uppercase, lowercase, a number and a symbol.
